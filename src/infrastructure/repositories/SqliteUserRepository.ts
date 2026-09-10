@@ -46,6 +46,58 @@ export class SqliteUserRepository implements IUserRepository {
     };
   }
 
+  async login(usernameOrEmail: string, password: string): Promise<User> {
+    if (!usernameOrEmail || !password) {
+      throw new Error('Usuario/Email y contraseña son obligatorios.');
+    }
+
+    const trimmed = usernameOrEmail.trim();
+    const rows = await this.db.query<{
+      id: string;
+      username: string;
+      email: string;
+      password_hash: string;
+      created_at: string;
+    }>(
+      'SELECT id, username, email, password_hash, created_at FROM users WHERE username = ? OR email = ? LIMIT 1',
+      [trimmed, trimmed]
+    );
+
+    if (rows.length === 0) {
+      throw new Error('Usuario o email no encontrado.');
+    }
+
+    const user = rows[0];
+    const expectedHash = `hashed_${password}`;
+
+    if (user.password_hash !== expectedHash) {
+      throw new Error('Contraseña incorrecta.');
+    }
+
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      createdAt: user.created_at,
+    };
+  }
+
+  async findById(id: string): Promise<User | null> {
+    const rows = await this.db.query<{ id: string; username: string; email: string; created_at: string }>(
+      'SELECT id, username, email, created_at FROM users WHERE id = ?',
+      [id]
+    );
+
+    if (rows.length === 0) return null;
+    const r = rows[0];
+    return {
+      id: r.id,
+      username: r.username,
+      email: r.email,
+      createdAt: r.created_at,
+    };
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     const rows = await this.db.query<{ id: string; username: string; email: string; created_at: string }>(
       'SELECT id, username, email, created_at FROM users WHERE email = ?',

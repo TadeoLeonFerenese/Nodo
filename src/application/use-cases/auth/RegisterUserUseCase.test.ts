@@ -29,4 +29,10 @@ describe('RegisterUserUseCase (Strict 4-field validation)', () => {
       })
     ).rejects.toThrow('Password confirmation does not match password.');
   });
+
+  it('should validate login inputs in SqliteUserRepository', async () => {
+    await expect(repo.login('', '1234')).rejects.toThrow('Usuario/Email y contraseña son obligatorios.');
+    await expect(repo.login('user', '')).rejects.toThrow('Usuario/Email y contraseña son obligatorios.');
+    await expect(repo.login('nonexistent', '1234')).rejects.toThrow('Usuario o email no encontrado.');
+  });
 });
