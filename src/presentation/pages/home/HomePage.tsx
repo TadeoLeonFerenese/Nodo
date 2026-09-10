@@ -156,9 +156,9 @@ export const HomePage: React.FC = () => {
 
         {/* TAB: CATÁLOGO DE PRODUCTOS */}
         {activeSubTab === 'catalog' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-6 items-start">
             {/* Alta de Producto */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-4">
+            <div className="lg:col-span-1 xl:col-span-4 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Nuevo Producto</h3>
               <form onSubmit={handleCreateProduct} className="flex flex-col gap-3">
                 <div className="flex gap-2">
@@ -185,7 +185,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Listado de Productos (Mobile Cards + Desktop Table) */}
-            <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col">
+            <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col min-h-[420px]">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Catálogo ({products.length})</h3>
                 <span className="text-xs text-slate-400 font-medium md:hidden">Vista móvil</span>
@@ -222,30 +222,30 @@ export const HomePage: React.FC = () => {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200 text-slate-400 uppercase font-semibold">
-                      <th className="py-3 px-2">Código</th>
-                      <th className="py-3 px-2">Nombre</th>
-                      <th className="py-3 px-2">Precio</th>
-                      <th className="py-3 px-2">Stock</th>
-                      <th className="py-3 px-2">Min</th>
+                      <th className="py-3.5 px-4">Código</th>
+                      <th className="py-3.5 px-4">Nombre</th>
+                      <th className="py-3.5 px-4">Precio</th>
+                      <th className="py-3.5 px-4">Stock</th>
+                      <th className="py-3.5 px-4">Min</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-medium">
                     {products.map((p) => (
                       <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="py-3 px-2 font-mono text-slate-600">{p.code}</td>
-                        <td className="py-3 px-2 font-bold text-slate-900">{p.name}</td>
-                        <td className="py-3 px-2 text-slate-700 font-mono">${p.price.toFixed(2)}</td>
-                        <td className="py-3 px-2">
+                        <td className="py-3.5 px-4 font-mono text-slate-600">{p.code}</td>
+                        <td className="py-3.5 px-4 font-bold text-slate-900">{p.name}</td>
+                        <td className="py-3.5 px-4 text-slate-700 font-mono">${p.price.toFixed(2)}</td>
+                        <td className="py-3.5 px-4">
                           <Badge variant={p.stock <= p.minStock ? 'warning' : 'success'}>
                             {p.stock} u.
                           </Badge>
                         </td>
-                        <td className="py-3 px-2 text-slate-400 font-mono">{p.minStock} u.</td>
+                        <td className="py-3.5 px-4 text-slate-400 font-mono">{p.minStock} u.</td>
                       </tr>
                     ))}
                     {products.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="py-6 text-center text-slate-400">Sin productos registrados aún.</td>
+                        <td colSpan={5} className="py-12 text-center text-slate-400">Sin productos registrados aún.</td>
                       </tr>
                     )}
                   </tbody>
@@ -255,11 +255,10 @@ export const HomePage: React.FC = () => {
           </div>
         )}
 
-
       {/* TAB: CONTROL TRANSACCIONAL DE STOCK */}
       {activeSubTab === 'stock' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-6 items-start">
+          <div className="lg:col-span-1 xl:col-span-4 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
             <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Movimiento de Stock</h3>
             <form onSubmit={handleRecordMovement} className="flex flex-col gap-3">
               <div className="flex gap-2 items-center">
@@ -314,7 +313,7 @@ export const HomePage: React.FC = () => {
             </form>
           </div>
 
-          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col">
+          <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col min-h-[420px]">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Histórico ({movements.length})</h3>
               <span className="text-xs text-slate-400 font-medium md:hidden">Vista móvil</span>
@@ -346,26 +345,26 @@ export const HomePage: React.FC = () => {
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200 text-slate-400 uppercase font-semibold">
-                    <th className="py-3 px-2">Tipo</th>
-                    <th className="py-3 px-2">Cantidad</th>
-                    <th className="py-3 px-2">Motivo</th>
-                    <th className="py-3 px-2">Fecha</th>
+                    <th className="py-3.5 px-4">Tipo</th>
+                    <th className="py-3.5 px-4">Cantidad</th>
+                    <th className="py-3.5 px-4">Motivo</th>
+                    <th className="py-3.5 px-4">Fecha</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
                   {movements.map((m) => (
                     <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-3 px-2">
+                      <td className="py-3.5 px-4">
                         <Badge variant={m.type === 'IN' ? 'success' : 'danger'}>{m.type}</Badge>
                       </td>
-                      <td className="py-3 px-2 font-bold text-slate-900">{m.quantity} u.</td>
-                      <td className="py-3 px-2 text-slate-600">{m.reason}</td>
-                      <td className="py-3 px-2 text-slate-400 font-mono">{new Date(m.createdAt).toLocaleTimeString()}</td>
+                      <td className="py-3.5 px-4 font-bold text-slate-900">{m.quantity} u.</td>
+                      <td className="py-3.5 px-4 text-slate-600">{m.reason}</td>
+                      <td className="py-3.5 px-4 text-slate-400 font-mono">{new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                     </tr>
                   ))}
                   {movements.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="py-6 text-center text-slate-400">Sin movimientos registrados aún.</td>
+                      <td colSpan={4} className="py-12 text-center text-slate-400">Sin movimientos registrados aún.</td>
                     </tr>
                   )}
                 </tbody>

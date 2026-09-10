@@ -10,20 +10,30 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ currentTab, onTabChange,
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800 pb-16 md:pb-0">
       {/* Top Bar / Header */}
-      <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-xs sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-sm">
-            N
+      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-3.5 shadow-xs sticky top-0 z-10">
+        <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center justify-center p-1.5">
+              <svg viewBox="0 0 108 108" className="w-full h-full" fill="none">
+                <path
+                  fill="#4F46E5"
+                  d="M34,77 L34,31 L43.5,31 L64.5,65 L64.5,31 L74,31 L74,77 L64.5,77 L43.5,43 L43.5,77 Z"
+                />
+              </svg>
+            </div>
+            <div className="flex flex-col">
+              <h1 className="text-lg font-bold tracking-tight text-slate-900 leading-tight">Nodo Inventory</h1>
+              <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">Sistema Local-First Multiplataforma</span>
+            </div>
           </div>
-          <h1 className="text-lg font-bold tracking-tight text-slate-900">Nodo Inventory</h1>
-        </div>
-        <div className="text-xs font-semibold px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full border border-indigo-100">
-          Local-First Engine
+          <div className="text-xs font-semibold px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full border border-indigo-100">
+            Local-First Engine
+          </div>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6">
+      <main className="flex-1 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8">
         {children}
       </main>
 
