@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Nodo Inventory</string>
+    <string name="title_activity_main">Nodo Inventory</string>
+    <string name="package_name">com.nodo.inventory</string>
+    <string name="custom_url_scheme">com.nodo.inventory</string>
+</resources>

@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Regla para @capacitor-community/barcode-scanner:
+   La cámara nativa en Android se dibuja detrás del WebView.
+   Cuando el escáner está activo, transparentamos el fondo del DOM. */
+body.scanner-active,
+body.scanner-active #root,
+body.scanner-active .scanner-transparent {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+body.scanner-active .scanner-hide-during-scan {
+  visibility: hidden !important;
+}
