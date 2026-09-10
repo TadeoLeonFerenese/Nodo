@@ -16,12 +16,15 @@
     "@capacitor-community/sqlite": "^5.7.0",
     "@capacitor/android": "^5.7.0",
     "@capacitor/core": "^5.7.0",
+    "@tauri-apps/plugin-sql": "^2.4.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@capacitor/cli": "^5.7.0",
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/cli": "^2.11.4",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.0",
