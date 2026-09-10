@@ -70,7 +70,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
             label="Usuario"
             name="username"
             type="text"
-            placeholder="Ej. tadeoleon"
+            placeholder="UsuarioEjemplo"
             value={formData.username}
             onChange={handleChange}
             required

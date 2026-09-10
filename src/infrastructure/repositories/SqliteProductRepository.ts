@@ -1,6 +1,7 @@
 import { IProductRepository } from '../../domain/repositories/IProductRepository';
 import { Product, CreateProductInput, UpdateProductInput } from '../../domain/entities/Product';
 import { DatabaseFactory } from '../db/DatabaseFactory';
+import { SyncService } from '../sync/SyncService';
 
 export class SqliteProductRepository implements IProductRepository {
   private get db() {
@@ -93,7 +94,7 @@ export class SqliteProductRepository implements IProductRepository {
       [id, input.code, input.name, input.price, input.stock, input.minStock, now, now]
     );
 
-    return {
+    const product: Product = {
       id,
       code: input.code,
       name: input.name,
@@ -103,6 +104,11 @@ export class SqliteProductRepository implements IProductRepository {
       createdAt: now,
       updatedAt: now,
     };
+
+    // Record to Local-First sync outbox
+    SyncService.getInstance().recordOutbox('products', 'INSERT', id, product).catch(console.error);
+
+    return product;
   }
 
   async update(id: string, input: UpdateProductInput): Promise<Product> {
@@ -122,7 +128,7 @@ export class SqliteProductRepository implements IProductRepository {
       [updatedCode, updatedName, updatedPrice, updatedMinStock, now, id]
     );
 
-    return {
+    const updatedProduct: Product = {
       ...current,
       code: updatedCode,
       name: updatedName,
@@ -130,9 +136,14 @@ export class SqliteProductRepository implements IProductRepository {
       minStock: updatedMinStock,
       updatedAt: now,
     };
+
+    SyncService.getInstance().recordOutbox('products', 'UPDATE', id, updatedProduct).catch(console.error);
+
+    return updatedProduct;
   }
 
   async delete(id: string): Promise<void> {
     await this.db.execute('DELETE FROM products WHERE id = ?', [id]);
+    SyncService.getInstance().recordOutbox('products', 'DELETE', id, { id }).catch(console.error);
   }
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuthStore } from '../../../application/stores/useAuthStore';
 import { Button } from '../../components/atoms/Button';
 import { Badge } from '../../components/atoms/Badge';
+import { WifiSyncCard } from '../../components/molecules/WifiSyncCard';
 
 export const ProfilePage: React.FC = () => {
   const { currentUser, logout } = useAuthStore();
@@ -40,6 +41,9 @@ export const ProfilePage: React.FC = () => {
           Cerrar Sesión Local
         </Button>
       </div>
+
+      {/* Sincronización Local Wi-Fi */}
+      <WifiSyncCard />
     </div>
   );
 };

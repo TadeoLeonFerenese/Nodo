@@ -33,6 +33,17 @@ CREATE TABLE IF NOT EXISTS stock_movements (
 
 CREATE INDEX IF NOT EXISTS idx_products_code ON products(code);
 CREATE INDEX IF NOT EXISTS idx_stock_movements_product ON stock_movements(product_id);
+
+CREATE TABLE IF NOT EXISTS sync_outbox (
+  id TEXT PRIMARY KEY,
+  table_name TEXT NOT NULL,
+  action TEXT NOT NULL,
+  record_id TEXT NOT NULL,
+  payload TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'PENDING',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_sync_outbox_status ON sync_outbox(status);
 `;
 
 export class CapacitorSqliteDriver implements IDatabaseDriver {

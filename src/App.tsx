@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from './application/stores/useAuthStore';
+import { useSyncStore } from './application/stores/useSyncStore';
 import { RegisterPage } from './presentation/pages/auth/RegisterPage';
 import { HomePage } from './presentation/pages/home/HomePage';
 import { ProfilePage } from './presentation/pages/profile/ProfilePage';
@@ -11,6 +12,7 @@ export function App() {
 
   useEffect(() => {
     checkCurrentUser();
+    useSyncStore.getState().initSyncEngine();
   }, [checkCurrentUser]);
 
   if (!isAuthenticated) {

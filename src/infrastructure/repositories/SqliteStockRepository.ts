@@ -2,6 +2,7 @@ import { IStockRepository } from '../../domain/repositories/IStockRepository';
 import { StockMovement, CreateStockMovementInput } from '../../domain/entities/StockMovement';
 import { Product } from '../../domain/entities/Product';
 import { DatabaseFactory } from '../db/DatabaseFactory';
+import { SyncService } from '../sync/SyncService';
 
 export class SqliteStockRepository implements IStockRepository {
   private get db() {
@@ -44,7 +45,7 @@ export class SqliteStockRepository implements IStockRepository {
         [newStock, now, input.productId]
       );
 
-      return {
+      const movement: StockMovement = {
         id,
         productId: input.productId,
         type: input.type,
@@ -52,6 +53,10 @@ export class SqliteStockRepository implements IStockRepository {
         reason: input.reason,
         createdAt: now,
       };
+
+      SyncService.getInstance().recordOutbox('stock_movements', 'INSERT', id, movement).catch(console.error);
+
+      return movement;
     });
   }
 
