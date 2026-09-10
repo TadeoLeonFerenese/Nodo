@@ -19,12 +19,15 @@ export function useBarcodeScanner(onScan: (barcode: string) => void) {
     try {
       const code = await BarcodeScannerService.scanFromCamera();
       setIsScanning(false);
+      if (code) {
+        onScan(code);
+      }
       return code;
     } catch (e) {
       setIsScanning(false);
       throw e;
     }
-  }, []);
+  }, [onScan]);
 
   const stopScan = useCallback(async () => {
     await BarcodeScannerService.stopScan();

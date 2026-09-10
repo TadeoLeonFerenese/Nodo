@@ -9,7 +9,7 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <div className="max-w-md mx-auto w-full flex flex-col gap-6">
-      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs flex flex-col gap-4">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs flex flex-col gap-4 scanner-hide-during-scan">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-700 flex items-center justify-center font-bold text-xl uppercase">
             {currentUser?.username?.[0] || 'U'}

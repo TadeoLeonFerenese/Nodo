@@ -3,6 +3,7 @@ import { Product, CreateProductInput, UpdateProductInput } from '../../domain/en
 import { SqliteProductRepository } from '../../infrastructure/repositories/SqliteProductRepository';
 import { CreateProductUseCase } from '../use-cases/products/CreateProductUseCase';
 import { UpdateProductUseCase, ListProductsUseCase, DeleteProductUseCase } from '../use-cases/products/ProductUseCases';
+import { useSyncStore } from './useSyncStore';
 
 const repo = new SqliteProductRepository();
 const createUseCase = new CreateProductUseCase(repo);
@@ -41,6 +42,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
       const newProduct = await createUseCase.execute(input);
       await get().loadProducts();
       set({ isLoading: false });
+      useSyncStore.getState().syncNow().catch(() => {});
       return newProduct;
     } catch (err) {
       set({ error: (err as Error).message, isLoading: false });
@@ -54,6 +56,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
       const updated = await updateUseCase.execute(id, input);
       await get().loadProducts();
       set({ isLoading: false });
+      useSyncStore.getState().syncNow().catch(() => {});
       return updated;
     } catch (err) {
       set({ error: (err as Error).message, isLoading: false });
@@ -67,6 +70,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
       await deleteUseCase.execute(id);
       await get().loadProducts();
       set({ isLoading: false });
+      useSyncStore.getState().syncNow().catch(() => {});
     } catch (err) {
       set({ error: (err as Error).message, isLoading: false });
       throw err;

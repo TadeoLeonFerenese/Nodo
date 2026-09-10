@@ -1,4 +1,5 @@
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
+import { isCapacitor } from '../../utils/platform';
 
 type ScanCallback = (barcode: string) => void;
 
@@ -48,23 +49,17 @@ export class BarcodeScannerService {
   }
 
   static async scanFromCamera(): Promise<string | null> {
-    const isCapacitor = typeof window !== 'undefined' && 'Capacitor' in window && (window as unknown as { Capacitor: { isNativePlatform: () => boolean } }).Capacitor.isNativePlatform();
-
-    if (!isCapacitor) {
+    if (!isCapacitor()) {
       // Simulated camera scan for Web / Dev mode
-      const mockCode = prompt('Simular Escáner de Cámara (Ingresar Código de Barras):', '779123456789');
-      if (mockCode) {
-        this.notify(mockCode);
-        return mockCode;
-      }
-      return null;
+      const mockCode = prompt('Simular Escáner de Cámara (Ingresar Código de Barras o URL):', 'http://192.168.0.3:4545');
+      return mockCode || null;
     }
 
     try {
       // 1. Explicitly check and request runtime camera permissions
       const status = await BarcodeScanner.checkPermission({ force: true });
       if (status.denied) {
-        alert('Se requiere permiso de cámara para escanear códigos de barra. Habilitalo en los ajustes de tu celular.');
+        alert('Se requiere permiso de cámara para escanear. Habilitá el permiso en los ajustes de la app.');
         return null;
       }
       if (!status.granted) {
@@ -74,6 +69,7 @@ export class BarcodeScannerService {
       // 2. Hide background and mark scanner active
       this.isScanningActive = true;
       document.body.classList.add('scanner-active');
+      document.documentElement.classList.add('scanner-active');
       await BarcodeScanner.hideBackground();
 
       // 3. Start native camera stream
@@ -81,8 +77,7 @@ export class BarcodeScannerService {
 
       await this.cleanupScan();
 
-      if (result.hasContent) {
-        this.notify(result.content);
+      if (result.hasContent && result.content) {
         return result.content;
       }
       return null;
@@ -100,16 +95,17 @@ export class BarcodeScannerService {
   private static async cleanupScan(): Promise<void> {
     this.isScanningActive = false;
     document.body.classList.remove('scanner-active');
+    document.documentElement.classList.remove('scanner-active');
     try {
       await BarcodeScanner.showBackground();
-      await BarcodeScanner.stopScan();
+      await BarcodeScanner.stopScan({ resolveScan: true });
     } catch {
       // Ignore cleanup error if already stopped
     }
   }
 
   private static notify(barcode: string): void {
-    console.log('[BarcodeScannerService] Barcode captured:', barcode);
+    console.log('[BarcodeScannerService] Barcode captured (hardware):', barcode);
     this.listeners.forEach((cb) => cb(barcode));
   }
 }

@@ -6,8 +6,10 @@ import { Badge } from '../atoms/Badge';
 import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
 import { ScannerOverlay } from './ScannerOverlay';
 
+import { isTauri } from '../../../utils/platform';
+
 export const WifiSyncCard: React.FC = () => {
-  const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+  const isDesktop = isTauri();
   const {
     serverUrl,
     isSyncing,
@@ -19,6 +21,8 @@ export const WifiSyncCard: React.FC = () => {
     setServerUrl,
     syncNow,
     refreshPendingCount,
+    fetchLocalServerIp,
+    autoDiscoverServer,
   } = useSyncStore();
 
   const [showQr, setShowQr] = useState(false);
@@ -28,7 +32,10 @@ export const WifiSyncCard: React.FC = () => {
 
   useEffect(() => {
     refreshPendingCount();
-  }, [refreshPendingCount]);
+    if (isDesktop) {
+      fetchLocalServerIp();
+    }
+  }, [refreshPendingCount, isDesktop, fetchLocalServerIp]);
 
   // Scanner hook for Android to scan the QR code from the PC monitor
   const { isScanning, triggerCameraScan, stopScan } = useBarcodeScanner(async (code) => {
@@ -41,6 +48,14 @@ export const WifiSyncCard: React.FC = () => {
       setFeedbackMsg('El código escaneado no es una URL de Nodo válida.');
     }
   });
+
+  const handleAutoDiscover = async () => {
+    setFeedbackMsg('Buscando PC con Nodo en la red Wi-Fi...');
+    const ok = await autoDiscoverServer();
+    if (ok) {
+      setFeedbackMsg('¡PC encontrada y vinculada con éxito!');
+    }
+  };
 
   const handleManualConnect = async () => {
     if (!manualIp.trim()) return;
@@ -67,17 +82,17 @@ export const WifiSyncCard: React.FC = () => {
     <>
       {isScanning && <ScannerOverlay onCancel={stopScan} />}
 
-      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs flex flex-col gap-4">
+      <div className={`bg-white border border-slate-200 rounded-xl p-6 shadow-xs flex flex-col gap-4 ${isScanning ? 'scanner-hide-during-scan' : ''}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
             </svg>
             <h3 className="font-bold text-slate-900 text-sm">
-              {isTauri ? 'Servidor Wi-Fi (Nodo Central)' : 'Sincronización con PC'}
+              {isDesktop ? 'Servidor Wi-Fi (Nodo Central)' : 'Sincronización con PC'}
             </h3>
           </div>
-          {isTauri ? (
+          {isDesktop ? (
             <Badge variant="success">Servidor Activo</Badge>
           ) : isServerOnline ? (
             <Badge variant="success">Conectado a PC</Badge>
@@ -89,7 +104,7 @@ export const WifiSyncCard: React.FC = () => {
         </div>
 
         {/* WINDOWS TAURI VIEW */}
-        {isTauri && (
+        {isDesktop && (
           <div className="flex flex-col gap-4">
             <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs flex flex-col gap-1">
               <span className="text-slate-500 font-semibold">Dirección de enlace Wi-Fi:</span>
@@ -123,7 +138,7 @@ export const WifiSyncCard: React.FC = () => {
         )}
 
         {/* ANDROID / MOBILE VIEW */}
-        {!isTauri && (
+        {!isDesktop && (
           <div className="flex flex-col gap-3 text-xs">
             <div className="flex justify-between items-center py-1">
               <span className="text-slate-500 font-semibold">PC Vinculada:</span>
@@ -183,6 +198,18 @@ export const WifiSyncCard: React.FC = () => {
               </Button>
             </div>
 
+            <Button
+              variant="secondary"
+              onClick={handleAutoDiscover}
+              disabled={isSyncing}
+              className="w-full text-xs flex items-center justify-center gap-1.5"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Buscar PC en Wi-Fi automáticamente
+            </Button>
+
             <button
               onClick={() => setShowManualInput(!showManualInput)}
               className="text-[11px] text-slate-400 hover:text-indigo-600 self-center underline mt-1"
@@ -194,7 +221,7 @@ export const WifiSyncCard: React.FC = () => {
               <div className="flex gap-2 mt-1">
                 <input
                   type="text"
-                  placeholder="ej. 192.168.1.50:4545"
+                  placeholder="ej. 192.168.0.3:4545"
                   value={manualIp}
                   onChange={(e) => setManualIp(e.target.value)}
                   className="flex-1 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-500"

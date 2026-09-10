@@ -10,7 +10,7 @@ export const ScannerOverlay: React.FC<ScannerOverlayProps> = ({
   title = 'Alineá el código dentro del recuadro'
 }) => {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-between p-6 pointer-events-auto select-none">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-between p-6 pointer-events-auto select-none bg-transparent">
       {/* Top Header */}
       <div className="mt-8 px-4 py-2 bg-slate-900/80 backdrop-blur-sm text-white text-xs font-semibold rounded-full border border-white/20 shadow-lg text-center">
         {title}

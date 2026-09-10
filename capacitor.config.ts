@@ -5,7 +5,8 @@ const config: CapacitorConfig = {
   appName: 'Nodo Inventory',
   webDir: 'dist',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'http',
+    cleartext: true
   },
   plugins: {
     CapacitorSQLite: {

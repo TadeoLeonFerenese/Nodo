@@ -10,6 +10,7 @@
     "test": "vitest run",
     "cap:sync": "vite build && npx cap sync",
     "cap:android": "vite build && npx cap sync && npx cap open android",
+    "build:apk": "npm run cap:sync && cd android && .\\gradlew.bat assembleDebug",
     "tauri": "tauri"
   },
   "dependencies": {

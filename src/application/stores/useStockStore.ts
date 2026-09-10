@@ -3,6 +3,7 @@ import { StockMovement, CreateStockMovementInput } from '../../domain/entities/S
 import { Product } from '../../domain/entities/Product';
 import { SqliteStockRepository } from '../../infrastructure/repositories/SqliteStockRepository';
 import { RecordStockMovementUseCase, GetLowStockAlertsUseCase } from '../use-cases/stock/StockUseCases';
+import { useSyncStore } from './useSyncStore';
 
 const repo = new SqliteStockRepository();
 const recordUseCase = new RecordStockMovementUseCase(repo);
@@ -50,6 +51,7 @@ export const useStockStore = create<StockState>((set, get) => ({
       await get().loadMovements();
       await get().loadLowStockAlerts();
       set({ isLoading: false });
+      useSyncStore.getState().syncNow().catch(() => {});
       return movement;
     } catch (err) {
       set({ error: (err as Error).message, isLoading: false });
