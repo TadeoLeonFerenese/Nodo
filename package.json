@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "cap:sync": "vite build && npx cap sync",
-    "cap:android": "vite build && npx cap sync && npx cap open android"
+    "cap:android": "vite build && npx cap sync && npx cap open android",
+    "tauri": "tauri"
   },
   "dependencies": {
     "@capacitor-community/barcode-scanner": "^4.0.1",
