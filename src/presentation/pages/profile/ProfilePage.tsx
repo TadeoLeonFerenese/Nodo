@@ -29,11 +29,7 @@ export const ProfilePage: React.FC = () => {
           </div>
           <div className="flex justify-between items-center py-1">
             <span className="text-slate-500 font-semibold">Motor de Sincronización:</span>
-            <Badge variant="info">Laravel Remote Sync Ready</Badge>
-          </div>
-          <div className="flex justify-between items-center py-1">
-            <span className="text-slate-500 font-semibold">Cola Pendiente de Sync:</span>
-            <span className="font-mono text-slate-600 font-bold">0 registros</span>
+            <Badge variant="info">Wi-Fi Direct Local Engine</Badge>
           </div>
         </div>
 

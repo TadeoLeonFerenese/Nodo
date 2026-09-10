@@ -26,6 +26,31 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ currentTab, onTabChange,
               <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">Sistema Local-First Multiplataforma</span>
             </div>
           </div>
+
+          {/* Navegación Desktop */}
+          <div className="hidden md:flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+            <button
+              onClick={() => onTabChange('home')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                currentTab === 'home'
+                  ? 'bg-white text-indigo-600 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Inicio
+            </button>
+            <button
+              onClick={() => onTabChange('profile')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                currentTab === 'profile'
+                  ? 'bg-white text-indigo-600 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Perfil & Sincronización
+            </button>
+          </div>
+
           <div className="text-xs font-semibold px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full border border-indigo-100">
             Local-First Engine
           </div>
