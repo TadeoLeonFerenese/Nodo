@@ -50,7 +50,7 @@ export class TauriSqliteDriver implements IDatabaseDriver {
 
   async query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
     if (!this.db) await this.initialize();
-    return await this.db!.select<T>(sql, params);
+    return await this.db!.select<T[]>(sql, params);
   }
 
   async transaction<T>(action: (driver: IDatabaseDriver) => Promise<T>): Promise<T> {
