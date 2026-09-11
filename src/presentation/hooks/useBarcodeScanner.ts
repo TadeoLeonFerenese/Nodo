@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BarcodeScannerService } from '../../infrastructure/scanner/BarcodeScannerService';
+import { SoundService } from '../../infrastructure/audio/SoundService';
 
 export function useBarcodeScanner(onScan: (barcode: string) => void) {
   const [isScanning, setIsScanning] = useState(false);
@@ -7,6 +8,7 @@ export function useBarcodeScanner(onScan: (barcode: string) => void) {
   useEffect(() => {
     const unsubscribe = BarcodeScannerService.subscribe((code) => {
       setIsScanning(false);
+      SoundService.playBarcodeBeep();
       onScan(code);
     });
     return () => {
@@ -20,6 +22,7 @@ export function useBarcodeScanner(onScan: (barcode: string) => void) {
       const code = await BarcodeScannerService.scanFromCamera();
       setIsScanning(false);
       if (code) {
+        SoundService.playBarcodeBeep();
         onScan(code);
       }
       return code;
