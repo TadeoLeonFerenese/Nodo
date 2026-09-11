@@ -49,52 +49,93 @@ CREATE INDEX IF NOT EXISTS idx_sync_outbox_status ON sync_outbox(status);
 export class CapacitorSqliteDriver implements IDatabaseDriver {
   private sqlite: SQLiteConnection | null = null;
   private db: SQLiteDBConnection | null = null;
+  private initPromise: Promise<void> | null = null;
+  private inTransaction = false;
 
   async initialize(): Promise<void> {
     if (this.db) return;
+    if (this.initPromise) return this.initPromise;
 
-    this.sqlite = new SQLiteConnection(CapacitorSQLite);
-    const isConn = await this.sqlite.isConnection('nodo', false);
-    if (isConn.result) {
-      this.db = await this.sqlite.retrieveConnection('nodo', false);
-    } else {
-      this.db = await this.sqlite.createConnection('nodo', false, 'no-encryption', 1, false);
-    }
+    this.initPromise = (async () => {
+      try {
+        console.log('[CapacitorSqliteDriver] Initializing SQLite connection to database "nodo"...');
+        this.sqlite = new SQLiteConnection(CapacitorSQLite);
+        const isConn = await this.sqlite.isConnection('nodo', false);
+        if (isConn.result) {
+          this.db = await this.sqlite.retrieveConnection('nodo', false);
+        } else {
+          this.db = await this.sqlite.createConnection('nodo', false, 'no-encryption', 1, false);
+        }
 
-    const isOpen = await this.db.isDBOpen();
-    if (!isOpen.result) {
-      await this.db.open();
-    }
+        const isOpen = await this.db.isDBOpen();
+        if (!isOpen.result) {
+          await this.db.open();
+        }
 
-    // Initialize core schema on startup
-    await this.db.execute(SCHEMA_SQL);
+        // Initialize core schema on startup
+        await this.db.execute(SCHEMA_SQL, false);
+        console.log('[CapacitorSqliteDriver] Database initialized successfully.');
+      } catch (err) {
+        console.error('[CapacitorSqliteDriver] Initialization error:', err);
+        this.db = null;
+        this.initPromise = null;
+        throw err;
+      }
+    })();
+
+    return this.initPromise;
   }
 
   async execute(sql: string, params: unknown[] = []): Promise<void> {
-    if (!this.db) await this.initialize();
-    if (params && params.length > 0) {
-      await this.db!.run(sql, params as (string | number | null)[]);
-    } else {
-      await this.db!.execute(sql);
+    await this.initialize();
+    // When inside a manual transaction, transaction must be false to prevent "Already in transaction" error
+    const useTransaction = !this.inTransaction;
+    try {
+      if (params && params.length > 0) {
+        await this.db!.run(sql, params as (string | number | null)[], useTransaction);
+      } else {
+        await this.db!.execute(sql, useTransaction);
+      }
+    } catch (err) {
+      console.error('[CapacitorSqliteDriver EXECUTE FAILED]', err, '\nSQL:', sql, '\nParams:', params, '\ninTransaction:', this.inTransaction);
+      throw err;
     }
   }
 
   async query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
-    if (!this.db) await this.initialize();
-    const res = await this.db!.query(sql, (params || []) as (string | number | null)[]);
-    return (res.values as T[]) || [];
+    await this.initialize();
+    try {
+      const res = await this.db!.query(sql, (params || []) as (string | number | null)[]);
+      return (res.values as T[]) || [];
+    } catch (err) {
+      console.error('[CapacitorSqliteDriver QUERY FAILED]', err, '\nSQL:', sql, '\nParams:', params);
+      throw err;
+    }
   }
 
   async transaction<T>(action: (driver: IDatabaseDriver) => Promise<T>): Promise<T> {
-    if (!this.db) await this.initialize();
-    await this.db!.beginTransaction();
+    await this.initialize();
+
+    // Prevent nested beginTransaction calls
+    if (this.inTransaction) {
+      return await action(this);
+    }
+
+    this.inTransaction = true;
     try {
+      await this.db!.beginTransaction();
       const result = await action(this);
       await this.db!.commitTransaction();
       return result;
     } catch (error) {
-      await this.db!.rollbackTransaction();
+      try {
+        await this.db!.rollbackTransaction();
+      } catch (rollbackErr) {
+        console.error('[CapacitorSqliteDriver] Rollback error:', rollbackErr);
+      }
       throw error;
+    } finally {
+      this.inTransaction = false;
     }
   }
 }

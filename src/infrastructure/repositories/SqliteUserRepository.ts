@@ -1,6 +1,7 @@
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { User, RegisterUserDto } from '../../domain/entities/User';
 import { DatabaseFactory } from '../db/DatabaseFactory';
+import { generateId } from '../../utils/uuid';
 
 export class SqliteUserRepository implements IUserRepository {
   private get db() {
@@ -31,9 +32,7 @@ export class SqliteUserRepository implements IUserRepository {
     }
 
     // 3. Simple hash simulation for local MVP
-    const id = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
-      ? crypto.randomUUID()
-      : `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const id = generateId('usr');
     const now = new Date().toISOString();
     const passwordHash = `hashed_${dto.password}`;
 

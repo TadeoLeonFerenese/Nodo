@@ -2,6 +2,7 @@ import { IProductRepository } from '../../domain/repositories/IProductRepository
 import { Product, CreateProductInput, UpdateProductInput } from '../../domain/entities/Product';
 import { DatabaseFactory } from '../db/DatabaseFactory';
 import { SyncService } from '../sync/SyncService';
+import { generateId } from '../../utils/uuid';
 
 export class SqliteProductRepository implements IProductRepository {
   private get db() {
@@ -85,7 +86,7 @@ export class SqliteProductRepository implements IProductRepository {
   }
 
   async create(input: CreateProductInput): Promise<Product> {
-    const id = crypto.randomUUID();
+    const id = generateId('prod');
     const now = new Date().toISOString();
 
     await this.db.execute(

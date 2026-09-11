@@ -1,4 +1,5 @@
 import { DatabaseFactory } from '../db/DatabaseFactory';
+import { generateId } from '../../utils/uuid';
 
 export interface OutboxItem {
   id: string;
@@ -39,7 +40,7 @@ export class SyncService {
     recordId: string,
     payloadData: unknown
   ): Promise<void> {
-    const id = crypto.randomUUID();
+    const id = generateId('sync');
     const payloadStr = JSON.stringify(payloadData);
     const now = new Date().toISOString();
 

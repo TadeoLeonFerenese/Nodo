@@ -3,6 +3,7 @@ import { StockMovement, CreateStockMovementInput } from '../../domain/entities/S
 import { Product } from '../../domain/entities/Product';
 import { DatabaseFactory } from '../db/DatabaseFactory';
 import { SyncService } from '../sync/SyncService';
+import { generateId } from '../../utils/uuid';
 
 export class SqliteStockRepository implements IStockRepository {
   private get db() {
@@ -30,7 +31,7 @@ export class SqliteStockRepository implements IStockRepository {
       }
 
       // 2. Insert movement
-      const id = crypto.randomUUID();
+      const id = generateId('mov');
       const now = new Date().toISOString();
 
       await driver.execute(
