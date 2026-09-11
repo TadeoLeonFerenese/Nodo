@@ -13,8 +13,8 @@ export class SqliteStockRepository implements IStockRepository {
   async recordMovement(input: CreateStockMovementInput): Promise<StockMovement> {
     return await this.db.transaction(async (driver) => {
       // 1. Fetch current product
-      const products = await driver.query<{ id: string; stock: number }>(
-        'SELECT id, stock FROM products WHERE id = ?',
+      const products = await driver.query<{ id: string; stock: number; name: string; code: string }>(
+        'SELECT id, stock, name, code FROM products WHERE id = ?',
         [input.productId]
       );
 
@@ -49,6 +49,8 @@ export class SqliteStockRepository implements IStockRepository {
       const movement: StockMovement = {
         id,
         productId: input.productId,
+        productName: products[0].name,
+        productCode: products[0].code,
         type: input.type,
         quantity: input.quantity,
         reason: input.reason,
@@ -65,15 +67,27 @@ export class SqliteStockRepository implements IStockRepository {
     const rows = await this.db.query<{
       id: string;
       product_id: string;
+      product_name?: string;
+      product_code?: string;
       type: 'IN' | 'OUT';
       quantity: number;
       reason: string;
       created_at: string;
-    }>('SELECT * FROM stock_movements WHERE product_id = ? ORDER BY created_at DESC', [productId]);
+    }>(
+      `SELECT sm.id, sm.product_id, sm.type, sm.quantity, sm.reason, sm.created_at,
+              p.name AS product_name, p.code AS product_code
+       FROM stock_movements sm
+       LEFT JOIN products p ON p.id = sm.product_id
+       WHERE sm.product_id = ?
+       ORDER BY sm.created_at DESC`,
+      [productId]
+    );
 
     return rows.map((r) => ({
       id: r.id,
       productId: r.product_id,
+      productName: r.product_name,
+      productCode: r.product_code,
       type: r.type,
       quantity: r.quantity,
       reason: r.reason,
@@ -85,15 +99,25 @@ export class SqliteStockRepository implements IStockRepository {
     const rows = await this.db.query<{
       id: string;
       product_id: string;
+      product_name?: string;
+      product_code?: string;
       type: 'IN' | 'OUT';
       quantity: number;
       reason: string;
       created_at: string;
-    }>('SELECT * FROM stock_movements ORDER BY created_at DESC');
+    }>(
+      `SELECT sm.id, sm.product_id, sm.type, sm.quantity, sm.reason, sm.created_at,
+              p.name AS product_name, p.code AS product_code
+       FROM stock_movements sm
+       LEFT JOIN products p ON p.id = sm.product_id
+       ORDER BY sm.created_at DESC`
+    );
 
     return rows.map((r) => ({
       id: r.id,
       productId: r.product_id,
+      productName: r.product_name,
+      productCode: r.product_code,
       type: r.type,
       quantity: r.quantity,
       reason: r.reason,

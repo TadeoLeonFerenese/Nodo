@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 /* Reglas para @capacitor-community/barcode-scanner:
    La cámara nativa en Android se dibuja detrás del WebView.
    Cuando el escáner está activo, transparentamos el fondo del DOM

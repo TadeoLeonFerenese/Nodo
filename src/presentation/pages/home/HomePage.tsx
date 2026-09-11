@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Product } from '../../../domain/entities/Product';
 import { useProductStore } from '../../../application/stores/useProductStore';
 import { useStockStore } from '../../../application/stores/useStockStore';
@@ -37,6 +37,10 @@ export const HomePage: React.FC = () => {
   // AI Receipt Parser state
   const [isParsingReceipt, setIsParsingReceipt] = useState(false);
   const [parsedItems, setParsedItems] = useState<{ name: string; quantity: number; code?: string }[]>([]);
+
+  // Paginación y visualización: 10 items por defecto + "Ver más" desplegable
+  const [showAllMovements, setShowAllMovements] = useState(false);
+  const [showAllProducts, setShowAllProducts] = useState(false);
 
   // Escáner unificado (USB keyboard listener / Cámara nativa)
   const { isScanning, triggerCameraScan, stopScan } = useBarcodeScanner((barcode) => {
@@ -156,6 +160,18 @@ export const HomePage: React.FC = () => {
 
   const scannedProduct = products.find((p) => p.code === scannedCode);
 
+  // Mapeo rápido para vincular nombres y códigos a las transacciones
+  const productMap = React.useMemo(() => {
+    return new Map(products.map((p) => [p.id, p]));
+  }, [products]);
+
+  // Lista acotada a 10 items iniciales con opción de desplegar más
+  const displayedMovements = showAllMovements ? movements : movements.slice(0, 10);
+  const hasMoreMovements = movements.length > 10;
+
+  const displayedProducts = showAllProducts ? products : products.slice(0, 10);
+  const hasMoreProducts = products.length > 10;
+
   return (
     <>
       {isScanning && <ScannerOverlay onCancel={stopScan} />}
@@ -212,25 +228,27 @@ export const HomePage: React.FC = () => {
 
         {/* Banner informativo de escáner */}
         {scannedCode && (
-          <div className={`border rounded-xl p-3.5 text-xs font-semibold flex items-center justify-between shadow-xs ${
+          <div className={`border rounded-xl p-3.5 text-xs font-semibold flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs ${
             scannedProduct
               ? 'bg-indigo-50 border-indigo-200 text-indigo-900'
               : 'bg-amber-50 border-amber-200 text-amber-900'
           }`}>
-            <div className="flex items-center gap-2">
-              <span className="text-base">{scannedProduct ? '📦' : '⚠️'}</span>
-              {scannedProduct ? (
-                <span>
-                  Producto Escaneado: <strong>{scannedProduct.name}</strong> (Stock: <strong className="font-mono">{scannedProduct.stock} u.</strong>)
-                </span>
-              ) : (
-                <span>
-                  Código <strong className="font-mono">{scannedCode}</strong> no registrado. Completa los datos en el formulario para registrarlo con su stock inicial.
-                </span>
-              )}
+            <div className="flex items-start sm:items-center gap-2.5 min-w-0 flex-1">
+              <span className="text-base shrink-0 mt-0.5 sm:mt-0">{scannedProduct ? '📦' : '⚠️'}</span>
+              <div className="break-words leading-relaxed">
+                {scannedProduct ? (
+                  <span>
+                    Producto Escaneado: <strong>{scannedProduct.name}</strong> (Stock: <strong className="font-mono">{scannedProduct.stock} u.</strong>)
+                  </span>
+                ) : (
+                  <span>
+                    Código <strong className="font-mono">{scannedCode}</strong> no registrado. Completa los datos en el formulario para registrarlo con su stock inicial.
+                  </span>
+                )}
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
               {scannedProduct && (
                 <button
                   type="button"
@@ -238,7 +256,7 @@ export const HomePage: React.FC = () => {
                     setAdjustingProduct(scannedProduct);
                     setIsAdjustModalOpen(true);
                   }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg transition-colors cursor-pointer text-xs"
                 >
                   Modificar Unidades
                 </button>
@@ -247,6 +265,7 @@ export const HomePage: React.FC = () => {
                 type="button"
                 onClick={() => setScannedCode('')}
                 className="text-slate-400 hover:text-slate-700 font-bold p-1 cursor-pointer"
+                title="Cerrar aviso"
               >
                 ✕
               </button>
@@ -339,13 +358,15 @@ export const HomePage: React.FC = () => {
             {/* Listado de Productos (Mobile Cards + Desktop Table) */}
             <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col min-h-[420px]">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Catálogo ({products.length})</h3>
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                  Catálogo ({products.length > 10 && !showAllProducts ? `10 de ${products.length}` : products.length})
+                </h3>
                 <span className="text-xs text-slate-400 font-medium">Toca +/- para ajustar unidades</span>
               </div>
 
               {/* Vista Móvil: Cards apiladas y estilizadas */}
               <div className="md:hidden flex flex-col divide-y divide-slate-100">
-                {products.map((p) => (
+                {displayedProducts.map((p) => (
                   <div key={p.id} className="py-3.5 flex flex-col gap-2">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
@@ -417,7 +438,7 @@ export const HomePage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-medium">
-                    {products.map((p) => (
+                    {displayedProducts.map((p) => (
                       <tr key={p.id} className="hover:bg-slate-50 transition-colors">
                         <td className="py-3.5 px-4 font-mono text-slate-600">{p.code}</td>
                         <td className="py-3.5 px-4 font-bold text-slate-900">{p.name}</td>
@@ -469,6 +490,31 @@ export const HomePage: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+
+              {/* Botón desplegable Ver más productos */}
+              {hasMoreProducts && (
+                <div className="pt-3.5 mt-2 border-t border-slate-100 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllProducts((prev) => !prev)}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 active:scale-95 rounded-xl border border-indigo-100/60 transition-all cursor-pointer shadow-2xs"
+                  >
+                    <span>
+                      {showAllProducts
+                        ? 'Ver menos productos (mostrar 10)'
+                        : `Ver más (${products.length - 10} productos restantes)`}
+                    </span>
+                    <svg
+                      className={`w-4 h-4 transition-transform duration-200 ${showAllProducts ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -544,61 +590,143 @@ export const HomePage: React.FC = () => {
 
             <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col min-h-[420px]">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Histórico ({movements.length})</h3>
-                <span className="text-xs text-slate-400 font-medium md:hidden">Vista móvil</span>
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                  Histórico ({movements.length > 10 && !showAllMovements ? `10 de ${movements.length}` : movements.length})
+                </h3>
+                <span className="text-xs text-slate-400 font-medium md:hidden">Entradas y Salidas</span>
               </div>
 
-              {/* Vista Móvil: Cards apiladas */}
+              {/* Vista Móvil: Cards apiladas con detalle del producto */}
               <div className="md:hidden flex flex-col divide-y divide-slate-100">
-                {movements.map((m) => (
-                  <div key={m.id} className="py-3 flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Badge variant={m.type === 'IN' ? 'success' : 'danger'}>{m.type}</Badge>
-                        <span className="font-bold text-slate-900 text-sm">{m.quantity} u.</span>
+                {displayedMovements.map((m) => {
+                  const product = productMap.get(m.productId);
+                  const productName = m.productName || product?.name || 'Producto no identificado';
+                  const productCode = m.productCode || product?.code || 'S/C';
+                  const isEntry = m.type === 'IN';
+
+                  return (
+                    <div key={m.id} className="py-3.5 flex flex-col gap-2 transition-colors hover:bg-slate-50/70 rounded-lg px-2 -mx-2">
+                      {/* Fila 1: Producto y Unidades */}
+                      <div className="flex items-start justify-between gap-2.5">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-slate-900 text-sm leading-snug break-words">
+                            {productName}
+                          </h4>
+                          <span className="font-mono text-[11px] text-slate-400 block mt-0.5">
+                            Cód: {productCode}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Badge variant={isEntry ? 'success' : 'danger'}>
+                            {isEntry ? '↓ Entrada' : '↑ Salida'}
+                          </Badge>
+                          <span
+                            className={`font-mono font-bold text-sm ${
+                              isEntry ? 'text-emerald-600' : 'text-rose-600'
+                            }`}
+                          >
+                            {isEntry ? `+${m.quantity}` : `-${m.quantity}`} u.
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-xs text-slate-400 font-mono">
-                        {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+
+                      {/* Fila 2: Motivo y Fecha */}
+                      <div className="flex items-center justify-between text-xs pt-1.5 border-t border-slate-50 text-slate-500">
+                        <span className="truncate max-w-[210px]" title={m.reason}>
+                          {m.reason || (isEntry ? 'Ingreso registrado' : 'Egreso registrado')}
+                        </span>
+                        <span className="font-mono text-[11px] text-slate-400 shrink-0">
+                          {new Date(m.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit' })}{' '}
+                          {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-xs text-slate-600 leading-normal">{m.reason}</p>
-                  </div>
-                ))}
+                  );
+                })}
                 {movements.length === 0 && (
                   <div className="py-8 text-center text-slate-400 text-xs">Sin movimientos registrados aún.</div>
                 )}
               </div>
 
-              {/* Vista Desktop / Tablet: Tabla */}
+              {/* Vista Desktop / Tablet: Tabla detallada */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200 text-slate-400 uppercase font-semibold">
                       <th className="py-3.5 px-4">Tipo</th>
+                      <th className="py-3.5 px-4">Producto</th>
                       <th className="py-3.5 px-4">Cantidad</th>
                       <th className="py-3.5 px-4">Motivo</th>
                       <th className="py-3.5 px-4">Fecha</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-medium">
-                    {movements.map((m) => (
-                      <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="py-3.5 px-4">
-                          <Badge variant={m.type === 'IN' ? 'success' : 'danger'}>{m.type}</Badge>
-                        </td>
-                        <td className="py-3.5 px-4 font-bold text-slate-900">{m.quantity} u.</td>
-                        <td className="py-3.5 px-4 text-slate-600">{m.reason}</td>
-                        <td className="py-3.5 px-4 text-slate-400 font-mono">{new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                      </tr>
-                    ))}
+                    {displayedMovements.map((m) => {
+                      const product = productMap.get(m.productId);
+                      const productName = m.productName || product?.name || 'Producto';
+                      const productCode = m.productCode || product?.code || 'S/C';
+                      const isEntry = m.type === 'IN';
+
+                      return (
+                        <tr key={m.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="py-3.5 px-4">
+                            <Badge variant={isEntry ? 'success' : 'danger'}>
+                              {isEntry ? '↓ Entrada' : '↑ Salida'}
+                            </Badge>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-900">{productName}</span>
+                              <span className="font-mono text-[11px] text-slate-400">Cód: {productCode}</span>
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 font-bold font-mono text-sm">
+                            <span className={isEntry ? 'text-emerald-600' : 'text-rose-600'}>
+                              {isEntry ? `+${m.quantity}` : `-${m.quantity}`} u.
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-600">{m.reason}</td>
+                          <td className="py-3.5 px-4 text-slate-400 font-mono">
+                            {new Date(m.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit' })}{' '}
+                            {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {movements.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="py-12 text-center text-slate-400">Sin movimientos registrados aún.</td>
+                        <td colSpan={5} className="py-12 text-center text-slate-400">Sin movimientos registrados aún.</td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
+
+              {/* Botón desplegable Ver más movimientos */}
+              {hasMoreMovements && (
+                <div className="pt-3.5 mt-2 border-t border-slate-100 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllMovements((prev) => !prev)}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 active:scale-95 rounded-xl border border-indigo-100/60 transition-all cursor-pointer shadow-2xs"
+                  >
+                    <span>
+                      {showAllMovements
+                        ? 'Ver menos movimientos (mostrar 10)'
+                        : `Ver más (${movements.length - 10} movimientos restantes)`}
+                    </span>
+                    <svg
+                      className={`w-4 h-4 transition-transform duration-200 ${showAllMovements ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
