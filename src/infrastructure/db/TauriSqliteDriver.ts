@@ -44,23 +44,58 @@ const SCHEMA_QUERIES = [
 
 export class TauriSqliteDriver implements IDatabaseDriver {
   private db: Database | null = null;
+  private initPromise: Promise<void> | null = null;
+
+  private convertPlaceholders(sql: string): string {
+    let count = 1;
+    return sql.replace(/\?/g, () => `$${count++}`);
+  }
 
   async initialize(): Promise<void> {
     if (this.db) return;
-    this.db = await Database.load('sqlite:nodo.db');
-    for (const query of SCHEMA_QUERIES) {
-      await this.db.execute(query);
-    }
+    if (this.initPromise) return this.initPromise;
+
+    this.initPromise = (async () => {
+      try {
+        console.log('[TauriSqliteDriver] Initializing SQLite connection to sqlite:nodo.db...');
+        this.db = await Database.load('sqlite:nodo.db');
+        console.log('[TauriSqliteDriver] SQLite connection established. Verifying schema...');
+        for (const query of SCHEMA_QUERIES) {
+          await this.db.execute(query);
+        }
+        console.log('[TauriSqliteDriver] SQLite schema initialized successfully.');
+      } catch (err) {
+        console.error('[TauriSqliteDriver] Initialization error:', err);
+        this.db = null;
+        this.initPromise = null;
+        throw err;
+      }
+    })();
+
+    return this.initPromise;
   }
 
   async execute(sql: string, params: unknown[] = []): Promise<void> {
-    if (!this.db) await this.initialize();
-    await this.db!.execute(sql, params);
+    await this.initialize();
+    const convertedSql = this.convertPlaceholders(sql);
+    try {
+      await this.db!.execute(convertedSql, params);
+    } catch (err) {
+      console.error('[TauriSqliteDriver EXECUTE FAILED]', err, '\nOriginal SQL:', sql, '\nConverted SQL:', convertedSql, '\nParams:', params);
+      throw err;
+    }
   }
 
   async query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
-    if (!this.db) await this.initialize();
-    return await this.db!.select<T[]>(sql, params);
+    await this.initialize();
+    const convertedSql = this.convertPlaceholders(sql);
+    try {
+      const rows = await this.db!.select<T[]>(convertedSql, params);
+      return rows;
+    } catch (err) {
+      console.error('[TauriSqliteDriver QUERY FAILED]', err, '\nOriginal SQL:', sql, '\nConverted SQL:', convertedSql, '\nParams:', params);
+      throw err;
+    }
   }
 
   async transaction<T>(action: (driver: IDatabaseDriver) => Promise<T>): Promise<T> {

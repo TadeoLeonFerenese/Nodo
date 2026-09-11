@@ -10,38 +10,43 @@ export class SqliteUserRepository implements IUserRepository {
   async register(dto: RegisterUserDto): Promise<User> {
     // 1. Strict 4-field validation
     if (!dto.username || !dto.email || !dto.password || !dto.passwordConfirmation) {
-      throw new Error('All 4 registration fields (username, email, password, passwordConfirmation) are strictly required.');
+      throw new Error('Todos los 4 campos (usuario, email, contraseña, confirmación) son obligatorios.');
     }
 
     if (dto.password !== dto.passwordConfirmation) {
-      throw new Error('Password and Password Confirmation do not match.');
+      throw new Error('La contraseña y su confirmación no coinciden.');
     }
 
-    // 2. Uniqueness check
-    const existing = await this.db.query<{ id: string }>('SELECT id FROM users WHERE username = ? OR email = ?', [
-      dto.username,
-      dto.email,
-    ]);
+    const username = dto.username.trim();
+    const email = dto.email.trim().toLowerCase();
+
+    // 2. Uniqueness check (case-insensitive)
+    const existing = await this.db.query<{ id: string }>(
+      'SELECT id FROM users WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)',
+      [username, email]
+    );
 
     if (existing.length > 0) {
-      throw new Error('User with this username or email already exists.');
+      throw new Error('Ya existe un usuario con este nombre de usuario o email.');
     }
 
-    // 3. Simple hash simulation for local MVP (In production, use bcrypt/argon2)
-    const id = crypto.randomUUID();
+    // 3. Simple hash simulation for local MVP
+    const id = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+      ? crypto.randomUUID()
+      : `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const now = new Date().toISOString();
     const passwordHash = `hashed_${dto.password}`;
 
     await this.db.execute(
       `INSERT INTO users (id, username, email, password_hash, created_at)
        VALUES (?, ?, ?, ?, ?)`,
-      [id, dto.username, dto.email, passwordHash, now]
+      [id, username, email, passwordHash, now]
     );
 
     return {
       id,
-      username: dto.username,
-      email: dto.email,
+      username,
+      email,
       createdAt: now,
     };
   }
@@ -51,7 +56,7 @@ export class SqliteUserRepository implements IUserRepository {
       throw new Error('Usuario/Email y contraseña son obligatorios.');
     }
 
-    const trimmed = usernameOrEmail.trim();
+    const trimmed = usernameOrEmail.trim().toLowerCase();
     const rows = await this.db.query<{
       id: string;
       username: string;
@@ -59,7 +64,7 @@ export class SqliteUserRepository implements IUserRepository {
       password_hash: string;
       created_at: string;
     }>(
-      'SELECT id, username, email, password_hash, created_at FROM users WHERE username = ? OR email = ? LIMIT 1',
+      'SELECT id, username, email, password_hash, created_at FROM users WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?) LIMIT 1',
       [trimmed, trimmed]
     );
 
