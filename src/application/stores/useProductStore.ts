@@ -4,6 +4,7 @@ import { SqliteProductRepository } from '../../infrastructure/repositories/Sqlit
 import { CreateProductUseCase } from '../use-cases/products/CreateProductUseCase';
 import { UpdateProductUseCase, ListProductsUseCase, DeleteProductUseCase } from '../use-cases/products/ProductUseCases';
 import { useSyncStore } from './useSyncStore';
+import { useStockStore } from './useStockStore';
 
 const repo = new SqliteProductRepository();
 const createUseCase = new CreateProductUseCase(repo);
@@ -41,6 +42,9 @@ export const useProductStore = create<ProductState>((set, get) => ({
     try {
       const newProduct = await createUseCase.execute(input);
       await get().loadProducts();
+      // Recargar movimientos e historial de stock para actualizar la UI en tiempo real
+      useStockStore.getState().loadMovements().catch(() => {});
+      useStockStore.getState().loadLowStockAlerts().catch(() => {});
       set({ isLoading: false });
       useSyncStore.getState().syncNow().catch(() => {});
       return newProduct;

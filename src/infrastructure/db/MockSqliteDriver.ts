@@ -30,8 +30,8 @@ export class MockSqliteDriver implements IDatabaseDriver {
       return;
     }
 
-    // INSERT OR REPLACE INTO products
-    if (/^INSERT OR REPLACE INTO products/i.test(cleanSql)) {
+    // INSERT OR REPLACE INTO products / INSERT INTO products
+    if (/^INSERT( OR REPLACE)? INTO products/i.test(cleanSql)) {
       const [id, code, name, price, stock, min_stock, created_at, updated_at] = params as any[];
       const idx = this.tables.products.findIndex((p) => p.id === id);
       const row = { id, code, name, price, stock, min_stock, created_at, updated_at };
@@ -43,8 +43,8 @@ export class MockSqliteDriver implements IDatabaseDriver {
       return;
     }
 
-    // INSERT OR REPLACE INTO stock_movements
-    if (/^INSERT OR REPLACE INTO stock_movements/i.test(cleanSql)) {
+    // INSERT OR REPLACE INTO stock_movements / INSERT INTO stock_movements
+    if (/^INSERT( OR REPLACE)? INTO stock_movements/i.test(cleanSql)) {
       const [id, product_id, type, quantity, reason, created_at] = params as any[];
       const idx = this.tables.stock_movements.findIndex((m) => m.id === id);
       const row = { id, product_id, type, quantity, reason, created_at };
@@ -112,27 +112,48 @@ export class MockSqliteDriver implements IDatabaseDriver {
     }
 
     // SELECT * FROM products WHERE id = ? or SELECT name FROM products WHERE id = ?
-    if (/SELECT .* FROM products WHERE id = \?/i.test(cleanSql)) {
+    if (/SELECT [\s\S]* FROM products WHERE id = \?/i.test(cleanSql)) {
       const targetId = params[0];
       const found = this.tables.products.filter((p) => p.id === targetId);
       return found as T[];
     }
 
     // SELECT * FROM products
-    if (/SELECT \* FROM products/i.test(cleanSql)) {
+    if (/SELECT [\s\S]* FROM products/i.test(cleanSql)) {
       return [...this.tables.products] as T[];
     }
 
+    // SELECT ... FROM stock_movements WHERE product_id = ?
+    if (/SELECT [\s\S]* FROM stock_movements[\s\S]*WHERE (sm\.)?product_id = \?/i.test(cleanSql)) {
+      const targetId = params[0];
+      const found = this.tables.stock_movements.filter((m) => m.product_id === targetId);
+      return found.map((m) => {
+        const prod = this.tables.products.find((p) => p.id === m.product_id);
+        return {
+          ...m,
+          product_name: prod?.name,
+          product_code: prod?.code,
+        };
+      }) as T[];
+    }
+
     // SELECT * FROM stock_movements WHERE id = ?
-    if (/SELECT .* FROM stock_movements WHERE id = \?/i.test(cleanSql)) {
+    if (/SELECT [\s\S]* FROM stock_movements WHERE (sm\.)?id = \?/i.test(cleanSql)) {
       const targetId = params[0];
       const found = this.tables.stock_movements.filter((m) => m.id === targetId);
       return found as T[];
     }
 
     // SELECT * FROM stock_movements
-    if (/SELECT \* FROM stock_movements/i.test(cleanSql)) {
-      return [...this.tables.stock_movements] as T[];
+    if (/SELECT [\s\S]* FROM stock_movements/i.test(cleanSql)) {
+      return this.tables.stock_movements.map((m) => {
+        const prod = this.tables.products.find((p) => p.id === m.product_id);
+        return {
+          ...m,
+          product_name: prod?.name,
+          product_code: prod?.code,
+        };
+      }) as T[];
     }
 
     return [] as T[];

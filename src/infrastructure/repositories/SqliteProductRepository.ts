@@ -1,5 +1,6 @@
 import { IProductRepository } from '../../domain/repositories/IProductRepository';
 import { Product, CreateProductInput, UpdateProductInput } from '../../domain/entities/Product';
+import { StockMovement } from '../../domain/entities/StockMovement';
 import { DatabaseFactory } from '../db/DatabaseFactory';
 import { SyncService } from '../sync/SyncService';
 import { generateId } from '../../utils/uuid';
@@ -86,30 +87,55 @@ export class SqliteProductRepository implements IProductRepository {
   }
 
   async create(input: CreateProductInput): Promise<Product> {
-    const id = generateId('prod');
-    const now = new Date().toISOString();
+    return await this.db.transaction(async (driver) => {
+      const id = generateId('prod');
+      const now = new Date().toISOString();
 
-    await this.db.execute(
-      `INSERT INTO products (id, code, name, price, stock, min_stock, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, input.code, input.name, input.price, input.stock, input.minStock, now, now]
-    );
+      await driver.execute(
+        `INSERT INTO products (id, code, name, price, stock, min_stock, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id, input.code, input.name, input.price, input.stock, input.minStock, now, now]
+      );
 
-    const product: Product = {
-      id,
-      code: input.code,
-      name: input.name,
-      price: input.price,
-      stock: input.stock,
-      minStock: input.minStock,
-      createdAt: now,
-      updatedAt: now,
-    };
+      const product: Product = {
+        id,
+        code: input.code,
+        name: input.name,
+        price: input.price,
+        stock: input.stock,
+        minStock: input.minStock,
+        createdAt: now,
+        updatedAt: now,
+      };
 
-    // Record to Local-First sync outbox
-    SyncService.getInstance().recordOutbox('products', 'INSERT', id, product).catch(console.error);
+      // Record to Local-First sync outbox
+      SyncService.getInstance().recordOutbox('products', 'INSERT', id, product).catch(console.error);
 
-    return product;
+      // Si el producto fue creado con stock inicial > 0, registrar automáticamente el movimiento de auditoría
+      if (input.stock > 0) {
+        const movId = generateId('mov');
+        await driver.execute(
+          `INSERT INTO stock_movements (id, product_id, type, quantity, reason, created_at)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [movId, id, 'IN', input.stock, 'Stock inicial', now]
+        );
+
+        const movement: StockMovement = {
+          id: movId,
+          productId: id,
+          productName: input.name,
+          productCode: input.code,
+          type: 'IN',
+          quantity: input.stock,
+          reason: 'Stock inicial',
+          createdAt: now,
+        };
+
+        SyncService.getInstance().recordOutbox('stock_movements', 'INSERT', movId, movement).catch(console.error);
+      }
+
+      return product;
+    });
   }
 
   async update(id: string, input: UpdateProductInput): Promise<Product> {
