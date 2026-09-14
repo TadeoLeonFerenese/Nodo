@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Product } from '../../../domain/entities/Product';
 import { Button } from '../atoms/Button';
 import { Badge } from '../atoms/Badge';
@@ -65,16 +65,20 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-xl flex flex-col gap-5 text-left">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150 overflow-y-auto">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 max-w-sm sm:max-w-md w-full shadow-2xl flex flex-col gap-4 text-left my-auto">
         {/* Encabezado del Producto */}
-        <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+        <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3.5">
           <div className="flex-1 min-w-0">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-md">
+            <span className="inline-block text-[10px] font-mono uppercase tracking-wider text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-md">
               Cód: {product.code}
             </span>
-            <h3 className="text-lg font-bold text-slate-900 mt-1 truncate">{product.name}</h3>
-            <span className="text-xs text-slate-500 font-mono">Precio: ${product.price.toFixed(2)}</span>
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 mt-1 truncate" title={product.name}>
+              {product.name}
+            </h3>
+            <span className="text-xs text-slate-500 font-mono">
+              Precio: ${product.price.toFixed(2)}
+            </span>
           </div>
           <div className="flex flex-col items-end shrink-0">
             <span className="text-[10px] uppercase font-semibold text-slate-400">Stock Actual</span>
@@ -90,80 +94,86 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
           {/* Tipo de Operación: Entrada / Salida */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Tipo de Movimiento</label>
+            <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+              Tipo de Movimiento
+            </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setType('IN')}
-                className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all border ${
+                className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all border cursor-pointer active:scale-98 ${
                   type === 'IN'
                     ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                     : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                 }`}
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
                 </svg>
-                Entrada (Ingreso)
+                <span>Entrada (Ingreso)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setType('OUT')}
-                className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all border ${
+                className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all border cursor-pointer active:scale-98 ${
                   type === 'OUT'
                     ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
                     : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                 }`}
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20 12H4" />
                 </svg>
-                Salida (Egreso)
+                <span>Salida (Egreso)</span>
               </button>
             </div>
           </div>
 
           {/* Cantidad / Selector de Unidades */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
               Unidades a {type === 'IN' ? 'Ingresar' : 'Egresar'}
             </label>
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 w-full">
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="w-12 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 font-bold text-xl flex items-center justify-center active:scale-95 transition-all cursor-pointer"
+                className="w-11 h-11 shrink-0 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 border border-slate-300 text-slate-800 font-bold text-xl flex items-center justify-center transition-all cursor-pointer select-none"
+                aria-label="Disminuir unidades"
               >
-                -
+                −
               </button>
-              <input
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                className="flex-1 h-12 text-center text-2xl font-bold font-mono text-slate-900 border border-slate-300 rounded-xl focus:border-indigo-600 focus:outline-none"
-              />
+              <div className="flex-1 min-w-0">
+                <input
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-full h-11 text-center text-xl sm:text-2xl font-bold font-mono text-slate-900 bg-white border border-slate-300 rounded-xl focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 focus:outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => setQuantity((q) => q + 1)}
-                className="w-12 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 font-bold text-xl flex items-center justify-center active:scale-95 transition-all cursor-pointer"
+                className="w-11 h-11 shrink-0 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 border border-slate-300 text-slate-800 font-bold text-xl flex items-center justify-center transition-all cursor-pointer select-none"
+                aria-label="Aumentar unidades"
               >
                 +
               </button>
             </div>
 
             {/* Accesos rápidos de incremento */}
-            <div className="flex items-center gap-1.5 justify-center mt-1">
+            <div className="grid grid-cols-5 gap-1.5 mt-1">
               {[1, 5, 10, 25, 50].map((inc) => (
                 <button
                   key={inc}
                   type="button"
                   onClick={() => handleQuickAdd(inc)}
-                  className="px-2.5 py-1 text-xs font-bold font-mono bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+                  className="py-1.5 px-1 text-xs font-bold font-mono bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 border border-slate-200 rounded-lg transition-colors cursor-pointer text-center active:scale-95"
                 >
                   +{inc}
                 </button>
@@ -172,7 +182,7 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
           </div>
 
           {/* Vista previa de Stock Resultante */}
-          <div className={`p-3 rounded-xl border flex items-center justify-between text-xs font-semibold ${
+          <div className={`p-2.5 sm:p-3 rounded-xl border flex items-center justify-between text-xs font-semibold ${
             isNegativeStock
               ? 'bg-rose-50 border-rose-200 text-rose-800'
               : 'bg-slate-50 border-slate-200 text-slate-700'
@@ -195,19 +205,19 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Ej. Ingreso por escaneo, venta, recuento..."
-              className="px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:border-indigo-600 focus:outline-none"
+              className="w-full min-w-0 px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 focus:outline-none transition-all text-slate-900 placeholder-slate-400"
             />
           </div>
 
           {/* Botones de acción */}
-          <div className="flex gap-2 pt-2">
-            <Button type="button" variant="secondary" onClick={onClose} className="flex-1" disabled={isSubmitting}>
+          <div className="flex gap-2 pt-1">
+            <Button type="button" variant="secondary" onClick={onClose} className="flex-1 py-2.5 text-xs sm:text-sm" disabled={isSubmitting}>
               Cancelar
             </Button>
             <Button
               type="submit"
               variant={type === 'IN' ? 'primary' : 'danger'}
-              className="flex-1"
+              className="flex-1 py-2.5 text-xs sm:text-sm"
               disabled={isSubmitting || isNegativeStock || quantity <= 0}
             >
               {isSubmitting ? 'Guardando...' : `Confirmar ${type === 'IN' ? 'Entrada' : 'Salida'}`}

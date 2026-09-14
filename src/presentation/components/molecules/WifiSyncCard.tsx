@@ -224,7 +224,7 @@ export const WifiSyncCard: React.FC = () => {
                   placeholder="ej. 192.168.0.3:4545"
                   value={manualIp}
                   onChange={(e) => setManualIp(e.target.value)}
-                  className="flex-1 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
+                  className="flex-1 min-w-0 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
                 />
                 <Button variant="secondary" onClick={handleManualConnect} className="text-xs">
                   Conectar

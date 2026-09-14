@@ -291,9 +291,9 @@ export const HomePage: React.FC = () => {
 
       {/* Modal de confirmación de eliminación (Baja ABM) */}
       {deletingProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 flex flex-col gap-4 text-center">
-            <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
+          <div className="bg-white rounded-2xl p-5 sm:p-6 max-w-sm w-full shadow-2xl border border-slate-100 flex flex-col gap-4 text-center my-auto">
+            <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center mx-auto shrink-0">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
@@ -304,13 +304,13 @@ export const HomePage: React.FC = () => {
                 ¿Estás seguro de que deseas dar de baja <strong className="text-slate-800">{deletingProduct.name}</strong> ({deletingProduct.code})? Esta acción se registrará en la base local y se replicará en la sincronización.
               </p>
             </div>
-            <div className="flex gap-2 justify-center mt-2">
+            <div className="flex gap-2 justify-center mt-1">
               <Button
                 type="button"
                 variant="secondary"
                 onClick={() => setDeletingProduct(null)}
                 disabled={isDeleting}
-                className="flex-1 text-xs"
+                className="flex-1 py-2.5 text-xs font-semibold"
               >
                 Cancelar
               </Button>
@@ -319,7 +319,7 @@ export const HomePage: React.FC = () => {
                 variant="danger"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
-                className="flex-1 text-xs"
+                className="flex-1 py-2.5 text-xs font-semibold"
               >
                 {isDeleting ? 'Eliminando...' : 'Eliminar'}
               </Button>
@@ -433,7 +433,7 @@ export const HomePage: React.FC = () => {
 
               <form onSubmit={handleCreateProduct} className="flex flex-col gap-3">
                 <div className="flex gap-2">
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <Input
                       placeholder="Código de Barras"
                       value={newCode}
@@ -918,7 +918,7 @@ export const HomePage: React.FC = () => {
 
             {/* Configuración de API Key (Opcional / LocalStorage) */}
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between text-xs">
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
                   API Key (Google Gemini / OpenAI)
                 </label>
@@ -927,7 +927,7 @@ export const HomePage: React.FC = () => {
                   placeholder="Pegá tu API Key (opcional: sin key simula la lectura)"
                   value={apiKey}
                   onChange={(e) => handleApiKeyChange(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 font-mono"
+                  className="w-full min-w-0 px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 font-mono"
                 />
               </div>
               {apiKey && (
