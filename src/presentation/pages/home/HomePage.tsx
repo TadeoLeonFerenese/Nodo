@@ -691,19 +691,26 @@ export const HomePage: React.FC = () => {
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Movimiento de Stock</h3>
               <form onSubmit={handleRecordMovement} className="flex flex-col gap-3">
                 <div className="flex gap-2 items-center">
-                  <select
-                    className="flex-1 px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 shadow-xs focus:border-indigo-500 focus:outline-none"
-                    value={selectedProductId}
-                    onChange={(e) => setSelectedProductId(e.target.value)}
-                    required
-                  >
-                    <option value="">Seleccionar Producto...</option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} (Stock: {p.stock} | Cód: {p.code})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative flex-1 min-w-0">
+                    <select
+                      className="w-full appearance-none pl-3.5 pr-9 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 shadow-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 focus:outline-none cursor-pointer truncate"
+                      value={selectedProductId}
+                      onChange={(e) => setSelectedProductId(e.target.value)}
+                      required
+                    >
+                      <option value="">Seleccionar Producto...</option>
+                      {products.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} (Stock: {p.stock} | Cód: {p.code})
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
                   <Button
                     type="button"
                     variant="secondary"
