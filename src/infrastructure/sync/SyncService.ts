@@ -133,6 +133,18 @@ export class SyncService {
 
       let appliedCount = 0;
       for (const item of parsed.items) {
+        if (item.action === 'DELETE') {
+          const targetId = item.record_id;
+          if (item.table_name === 'products') {
+            await this.db.execute('DELETE FROM products WHERE id = ?', [targetId]);
+            appliedCount++;
+          } else if (item.table_name === 'stock_movements') {
+            await this.db.execute('DELETE FROM stock_movements WHERE id = ?', [targetId]);
+            appliedCount++;
+          }
+          continue;
+        }
+
         if (item.table_name === 'products') {
           interface ProductPayload {
             id: string;

@@ -11,7 +11,7 @@ import { ScannerOverlay } from '../../components/molecules/ScannerOverlay';
 import { StockAdjustmentModal } from '../../components/molecules/StockAdjustmentModal';
 
 export const HomePage: React.FC = () => {
-  const { products, loadProducts, createProduct, isLoading: loadingProducts } = useProductStore();
+  const { products, loadProducts, createProduct, deleteProduct, isLoading: loadingProducts } = useProductStore();
   const { movements, lowStockProducts, loadMovements, loadLowStockAlerts, recordMovement } = useStockStore();
 
   const [activeSubTab, setActiveSubTab] = useState<'catalog' | 'stock' | 'receipt'>('catalog');
@@ -20,6 +20,10 @@ export const HomePage: React.FC = () => {
   // Modal de ajuste rápido de stock / unidades
   const [adjustingProduct, setAdjustingProduct] = useState<Product | null>(null);
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
+
+  // Modal de confirmación de eliminación (Baja ABM)
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Form states for Product
   const [newCode, setNewCode] = useState('');
@@ -36,7 +40,15 @@ export const HomePage: React.FC = () => {
 
   // AI Receipt Parser state
   const [isParsingReceipt, setIsParsingReceipt] = useState(false);
-  const [parsedItems, setParsedItems] = useState<{ name: string; quantity: number; code?: string }[]>([]);
+  const [parsedItems, setParsedItems] = useState<{ name: string; quantity: number; code?: string; unitPrice?: number }[]>([]);
+  const [apiKey, setApiKey] = useState(() => {
+    return typeof window !== 'undefined' ? localStorage.getItem('nodo_ai_api_key') || '' : '';
+  });
+  const [activeModel, setActiveModel] = useState<string>('gemini-3.5-flash');
+  const [receiptImageBase64, setReceiptImageBase64] = useState<string>('');
+  const [receiptImagePreview, setReceiptImagePreview] = useState<string>('');
+  const [isImportingReceipt, setIsImportingReceipt] = useState(false);
+  const [importSuccessMsg, setImportSuccessMsg] = useState<string | null>(null);
 
   // Paginación y visualización: 10 items por defecto + "Ver más" desplegable
   const [showAllMovements, setShowAllMovements] = useState(false);
@@ -145,16 +157,109 @@ export const HomePage: React.FC = () => {
     }
   };
 
-  const handleProcessReceiptMock = async () => {
+  const handleConfirmDelete = async () => {
+    if (!deletingProduct) return;
+    setIsDeleting(true);
+    try {
+      await deleteProduct(deletingProduct.id);
+      setDeletingProduct(null);
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleApiKeyChange = (val: string) => {
+    setApiKey(val);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('nodo_ai_api_key', val);
+    }
+    if (val.trim()) {
+      const parser = new GeminiReceiptParser();
+      parser
+        .discoverModel(val.trim())
+        .then((m) => setActiveModel(m))
+        .catch(() => {});
+    }
+  };
+
+  const handleReceiptFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      setReceiptImagePreview(result);
+      setReceiptImageBase64(result);
+      setParsedItems([]);
+      setImportSuccessMsg(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleProcessReceipt = async () => {
     setIsParsingReceipt(true);
+    setImportSuccessMsg(null);
     try {
       const parser = new GeminiReceiptParser();
-      const items = await parser.parseReceiptImage('sample_base64_receipt');
+      const items = await parser.parseReceiptImage(receiptImageBase64, apiKey || undefined);
       setParsedItems(items);
     } catch (err) {
       alert((err as Error).message);
     } finally {
       setIsParsingReceipt(false);
+    }
+  };
+
+  const handleImportToInventory = async () => {
+    if (parsedItems.length === 0) return;
+    setIsImportingReceipt(true);
+    try {
+      let importedCount = 0;
+      for (const item of parsedItems) {
+        if (!item.name || item.quantity <= 0) continue;
+        const existing = products.find(
+          (p) => (item.code && p.code === item.code) || p.name.toLowerCase() === item.name.toLowerCase()
+        );
+
+        if (existing) {
+          await recordMovement({
+            productId: existing.id,
+            type: 'IN',
+            quantity: item.quantity,
+            reason: 'Remito IA (Ingreso de stock)',
+          });
+        } else {
+          const generatedCode = item.code || `REM-${Math.floor(100000 + Math.random() * 900000)}`;
+          const newProd = await createProduct({
+            code: generatedCode,
+            name: item.name,
+            price: item.unitPrice || 0,
+            stock: item.quantity,
+            minStock: 2,
+          });
+          await recordMovement({
+            productId: newProd.id,
+            type: 'IN',
+            quantity: item.quantity,
+            reason: 'Alta catálogo desde Remito IA',
+          });
+        }
+        importedCount++;
+      }
+
+      await loadProducts();
+      await loadMovements();
+      await loadLowStockAlerts();
+      setImportSuccessMsg(`¡Se importaron con éxito ${importedCount} items al inventario y catálogo!`);
+      setParsedItems([]);
+      setReceiptImagePreview('');
+      setReceiptImageBase64('');
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setIsImportingReceipt(false);
     }
   };
 
@@ -183,6 +288,45 @@ export const HomePage: React.FC = () => {
         onClose={() => setIsAdjustModalOpen(false)}
         onConfirm={handleConfirmStockAdjustment}
       />
+
+      {/* Modal de confirmación de eliminación (Baja ABM) */}
+      {deletingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 flex flex-col gap-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">¿Eliminar Producto?</h3>
+              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                ¿Estás seguro de que deseas dar de baja <strong className="text-slate-800">{deletingProduct.name}</strong> ({deletingProduct.code})? Esta acción se registrará en la base local y se replicará en la sincronización.
+              </p>
+            </div>
+            <div className="flex gap-2 justify-center mt-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setDeletingProduct(null)}
+                disabled={isDeleting}
+                className="flex-1 text-xs"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="flex-1 text-xs"
+              >
+                {isDeleting ? 'Eliminando...' : 'Eliminar'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={`flex flex-col gap-6 ${isScanning ? 'scanner-hide-during-scan' : ''}`}>
         {/* Alertas de Stock Mínimo */}
@@ -373,9 +517,21 @@ export const HomePage: React.FC = () => {
                         <h4 className="font-bold text-slate-900 text-sm leading-snug break-words">{p.name}</h4>
                         <span className="font-mono text-xs text-slate-400 mt-0.5 inline-block">Cód: {p.code}</span>
                       </div>
-                      <span className="font-mono font-bold text-sm text-indigo-600 shrink-0">
-                        ${p.price.toFixed(2)}
-                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="font-mono font-bold text-sm text-indigo-600">
+                          ${p.price.toFixed(2)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setDeletingProduct(p)}
+                          title="Eliminar producto"
+                          className="w-7 h-7 rounded-lg bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 flex items-center justify-center transition-colors cursor-pointer"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
 
                     <div className="flex items-center justify-between text-xs pt-1.5 border-t border-slate-50">
@@ -469,16 +625,25 @@ export const HomePage: React.FC = () => {
                         </td>
                         <td className="py-3.5 px-4 text-slate-400 font-mono">{p.minStock} u.</td>
                         <td className="py-3.5 px-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setAdjustingProduct(p);
-                              setIsAdjustModalOpen(true);
-                            }}
-                            className="px-2.5 py-1 text-xs font-semibold text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
-                          >
-                            Modificar Stock
-                          </button>
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAdjustingProduct(p);
+                                setIsAdjustModalOpen(true);
+                              }}
+                              className="px-2.5 py-1 text-xs font-semibold text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                            >
+                              Modificar Stock
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeletingProduct(p)}
+                              className="px-2.5 py-1 text-xs font-semibold text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            >
+                              Eliminar
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -733,27 +898,215 @@ export const HomePage: React.FC = () => {
 
         {/* TAB: REMITO IA */}
         {activeSubTab === 'receipt' && (
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs flex flex-col gap-4 max-w-2xl mx-auto w-full">
-            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Procesamiento Inteligente de Remitos (IA)</h3>
-            <p className="text-xs text-slate-500">
-              Sube o toma una foto del remito para extraer automáticamente la lista de productos y cantidades estructurados.
-            </p>
+          <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-6 max-w-3xl mx-auto w-full">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                  Procesamiento Inteligente de Remitos
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Subí o tomá una foto del remito para extraer automáticamente productos, cantidades y precios.
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 self-start sm:self-center">
+                <span className="text-[11px] text-slate-400 font-medium">Motor:</span>
+                <Badge variant="info">
+                  {activeModel}
+                </Badge>
+              </div>
+            </div>
 
-            <Button variant="primary" onClick={handleProcessReceiptMock} disabled={isParsingReceipt}>
-              {isParsingReceipt ? 'Procesando con IA...' : 'Simular Lectura de Remito con IA'}
-            </Button>
+            {/* Configuración de API Key (Opcional / LocalStorage) */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between text-xs">
+              <div className="flex-1">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                  API Key (Google Gemini / OpenAI)
+                </label>
+                <input
+                  type="password"
+                  placeholder="Pegá tu API Key (opcional: sin key simula la lectura)"
+                  value={apiKey}
+                  onChange={(e) => handleApiKeyChange(e.target.value)}
+                  className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 font-mono"
+                />
+              </div>
+              {apiKey && (
+                <button
+                  type="button"
+                  onClick={() => handleApiKeyChange('')}
+                  className="text-xs text-slate-400 hover:text-rose-600 underline self-end sm:self-center cursor-pointer"
+                >
+                  Limpiar Key
+                </button>
+              )}
+            </div>
 
+            {/* Input de Cámara / Subida de Archivo */}
+            <div className="flex flex-col gap-3">
+              <label className="block text-xs font-bold text-slate-700 uppercase">
+                Foto del Remito
+              </label>
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-semibold border border-indigo-200 transition-colors shadow-2xs">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  </svg>
+                  <span>Tomar Foto / Subir Imagen</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleReceiptFileChange}
+                    className="hidden"
+                  />
+                </label>
+                {receiptImagePreview && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReceiptImagePreview('');
+                      setReceiptImageBase64('');
+                      setParsedItems([]);
+                    }}
+                    className="text-xs text-rose-600 hover:underline cursor-pointer"
+                  >
+                    Quitar foto
+                  </button>
+                )}
+              </div>
+
+              {/* Preview de la Imagen cargada */}
+              {receiptImagePreview && (
+                <div className="relative mt-2 max-h-60 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center">
+                  <img
+                    src={receiptImagePreview}
+                    alt="Preview del Remito"
+                    className="max-h-60 object-contain"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Botón de Procesamiento */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                variant="primary"
+                onClick={handleProcessReceipt}
+                disabled={isParsingReceipt}
+                className="flex-1"
+              >
+                {isParsingReceipt ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                    <span>Analizando Remito con IA...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    <span>{receiptImageBase64 ? 'Procesar Foto del Remito' : 'Simular Lectura de Remito'}</span>
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Mensaje de éxito de importación */}
+            {importSuccessMsg && (
+              <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center gap-2 font-medium">
+                <svg className="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>{importSuccessMsg}</span>
+              </div>
+            )}
+
+            {/* Tabla de Items Extraídos */}
             {parsedItems.length > 0 && (
-              <div className="mt-4 border border-slate-200 rounded-xl p-4 flex flex-col gap-3">
-                <h4 className="text-xs font-bold text-slate-700 uppercase">Items Extraídos ({parsedItems.length})</h4>
-                <ul className="divide-y divide-slate-100 text-xs">
-                  {parsedItems.map((item, idx) => (
-                    <li key={idx} className="py-2 flex justify-between items-center">
-                      <span className="font-semibold text-slate-900">{item.name}</span>
-                      <Badge variant="info">{item.quantity} u.</Badge>
-                    </li>
-                  ))}
-                </ul>
+              <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs flex flex-col">
+                <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                    Items Detectados ({parsedItems.length})
+                  </h4>
+                  <span className="text-[11px] text-slate-400">Podés editar antes de cargar</span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-100 text-slate-400 uppercase font-semibold bg-white">
+                        <th className="py-2.5 px-4">Producto</th>
+                        <th className="py-2.5 px-4">Cantidad</th>
+                        <th className="py-2.5 px-4">Precio Unit.</th>
+                        <th className="py-2.5 px-4">Cód. Asignado</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 bg-white">
+                      {parsedItems.map((item, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50">
+                          <td className="py-2 px-4">
+                            <input
+                              type="text"
+                              value={item.name}
+                              onChange={(e) => {
+                                const copy = [...parsedItems];
+                                copy[idx].name = e.target.value;
+                                setParsedItems(copy);
+                              }}
+                              className="w-full bg-transparent border-b border-dashed border-slate-300 focus:border-indigo-500 focus:outline-none text-slate-900 font-medium py-1"
+                            />
+                          </td>
+                          <td className="py-2 px-4 w-28">
+                            <input
+                              type="number"
+                              value={item.quantity}
+                              onChange={(e) => {
+                                const copy = [...parsedItems];
+                                copy[idx].quantity = parseInt(e.target.value) || 0;
+                                setParsedItems(copy);
+                              }}
+                              className="w-20 bg-transparent border-b border-dashed border-slate-300 focus:border-indigo-500 focus:outline-none text-slate-900 font-mono font-bold py-1"
+                            />
+                          </td>
+                          <td className="py-2 px-4 w-32">
+                            <div className="flex items-center text-slate-500 font-mono">
+                              <span>$</span>
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={item.unitPrice ?? ''}
+                                placeholder="0.00"
+                                onChange={(e) => {
+                                  const copy = [...parsedItems];
+                                  copy[idx].unitPrice = parseFloat(e.target.value) || 0;
+                                  setParsedItems(copy);
+                                }}
+                                className="w-24 bg-transparent border-b border-dashed border-slate-300 focus:border-indigo-500 focus:outline-none text-slate-900 font-mono py-1 ml-1"
+                              />
+                            </div>
+                          </td>
+                          <td className="py-2 px-4 text-slate-400 font-mono text-[11px]">
+                            {item.code || 'Auto-generado'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+                  <Button
+                    variant="primary"
+                    onClick={handleImportToInventory}
+                    disabled={isImportingReceipt}
+                    className="w-full sm:w-auto"
+                  >
+                    {isImportingReceipt ? 'Ingresando items...' : 'Cargar Items al Inventario'}
+                  </Button>
+                </div>
               </div>
             )}
           </div>
