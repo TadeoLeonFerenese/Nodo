@@ -38,6 +38,9 @@ export const HomePage: React.FC = () => {
   const [movementQty, setMovementQty] = useState('');
   const [movementReason, setMovementReason] = useState('');
 
+  // Filtro de Histórico de Movimientos (ALL, IN, OUT)
+  const [historyFilter, setHistoryFilter] = useState<'ALL' | 'IN' | 'OUT'>('ALL');
+
   // AI Receipt Parser state
   const [isParsingReceipt, setIsParsingReceipt] = useState(false);
   const [parsedItems, setParsedItems] = useState<{ name: string; quantity: number; code?: string; unitPrice?: number }[]>([]);
@@ -270,9 +273,17 @@ export const HomePage: React.FC = () => {
     return new Map(products.map((p) => [p.id, p]));
   }, [products]);
 
-  // Lista acotada a 10 items iniciales con opción de desplegar más
-  const displayedMovements = showAllMovements ? movements : movements.slice(0, 10);
-  const hasMoreMovements = movements.length > 10;
+  // Filtrado y conteo de movimientos (Entradas vs Salidas)
+  const inCount = movements.filter((m) => m.type === 'IN').length;
+  const outCount = movements.filter((m) => m.type === 'OUT').length;
+
+  const filteredMovements = movements.filter((m) => {
+    if (historyFilter === 'ALL') return true;
+    return m.type === historyFilter;
+  });
+
+  const displayedMovements = showAllMovements ? filteredMovements : filteredMovements.slice(0, 10);
+  const hasMoreMovements = filteredMovements.length > 10;
 
   const displayedProducts = showAllProducts ? products : products.slice(0, 10);
   const hasMoreProducts = products.length > 10;
@@ -688,7 +699,10 @@ export const HomePage: React.FC = () => {
         {activeSubTab === 'stock' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-6 items-start">
             <div className="lg:col-span-1 xl:col-span-4 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Movimiento de Stock</h3>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Registrar Movimiento Manual</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Ingreso o egreso manual de mercadería</p>
+              </div>
               <form onSubmit={handleRecordMovement} className="flex flex-col gap-3">
                 <div className="flex gap-2 items-center">
                   <div className="relative flex-1 min-w-0">
@@ -724,23 +738,28 @@ export const HomePage: React.FC = () => {
                   </Button>
                 </div>
 
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant={movementType === 'IN' ? 'primary' : 'secondary'}
-                    className="flex-1"
-                    onClick={() => setMovementType('IN')}
-                  >
-                    Entrada (IN)
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={movementType === 'OUT' ? 'danger' : 'secondary'}
-                    className="flex-1"
-                    onClick={() => setMovementType('OUT')}
-                  >
-                    Salida (OUT)
-                  </Button>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    Tipo de operación a registrar
+                  </label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={movementType === 'IN' ? 'primary' : 'secondary'}
+                      className="flex-1"
+                      onClick={() => setMovementType('IN')}
+                    >
+                      Entrada (IN)
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={movementType === 'OUT' ? 'danger' : 'secondary'}
+                      className="flex-1"
+                      onClick={() => setMovementType('OUT')}
+                    >
+                      Salida (OUT)
+                    </Button>
+                  </div>
                 </div>
 
                 <Input
@@ -761,11 +780,53 @@ export const HomePage: React.FC = () => {
             </div>
 
             <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col min-h-[420px]">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                  Histórico ({movements.length > 10 && !showAllMovements ? `10 de ${movements.length}` : movements.length})
-                </h3>
-                <span className="text-xs text-slate-400 font-medium md:hidden">Entradas y Salidas</span>
+              {/* Cabecera del Histórico con Pills de Filtrado */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-100 pb-3.5">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                    Histórico ({filteredMovements.length > 10 && !showAllMovements ? `10 de ${filteredMovements.length}` : filteredMovements.length})
+                  </h3>
+                  <span className="text-xs text-slate-400 font-medium">Movimientos registrados</span>
+                </div>
+
+                {/* Segmented Control / Pills de Filtrado */}
+                <div className="flex flex-wrap items-center gap-1.5 bg-slate-100/80 p-1 rounded-xl shrink-0 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setHistoryFilter('ALL')}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                      historyFilter === 'ALL'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    Todos ({movements.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHistoryFilter('IN')}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                      historyFilter === 'IN'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-emerald-700 hover:bg-emerald-50'
+                    }`}
+                  >
+                    <span>↓ Entradas</span>
+                    <span className="font-mono text-[11px] opacity-90">({inCount})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setHistoryFilter('OUT')}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                      historyFilter === 'OUT'
+                        ? 'bg-rose-600 text-white shadow-xs'
+                        : 'text-rose-700 hover:bg-rose-50'
+                    }`}
+                  >
+                    <span>↑ Salidas</span>
+                    <span className="font-mono text-[11px] opacity-90">({outCount})</span>
+                  </button>
+                </div>
               </div>
 
               {/* Vista Móvil: Cards apiladas con detalle del producto */}
@@ -816,8 +877,12 @@ export const HomePage: React.FC = () => {
                     </div>
                   );
                 })}
-                {movements.length === 0 && (
-                  <div className="py-8 text-center text-slate-400 text-xs">Sin movimientos registrados aún.</div>
+                {filteredMovements.length === 0 && (
+                  <div className="py-8 text-center text-slate-400 text-xs font-medium">
+                    {historyFilter === 'IN' && 'No hay movimientos de entrada registrados.'}
+                    {historyFilter === 'OUT' && 'No hay movimientos de salida registrados.'}
+                    {historyFilter === 'ALL' && 'Sin movimientos registrados aún.'}
+                  </div>
                 )}
               </div>
 
@@ -866,9 +931,13 @@ export const HomePage: React.FC = () => {
                         </tr>
                       );
                     })}
-                    {movements.length === 0 && (
+                    {filteredMovements.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="py-12 text-center text-slate-400">Sin movimientos registrados aún.</td>
+                        <td colSpan={5} className="py-12 text-center text-slate-400 font-medium">
+                          {historyFilter === 'IN' && 'No hay movimientos de entrada registrados.'}
+                          {historyFilter === 'OUT' && 'No hay movimientos de salida registrados.'}
+                          {historyFilter === 'ALL' && 'Sin movimientos registrados aún.'}
+                        </td>
                       </tr>
                     )}
                   </tbody>
@@ -886,7 +955,7 @@ export const HomePage: React.FC = () => {
                     <span>
                       {showAllMovements
                         ? 'Ver menos movimientos (mostrar 10)'
-                        : `Ver más (${movements.length - 10} movimientos restantes)`}
+                        : `Ver más (${filteredMovements.length - 10} movimientos restantes)`}
                     </span>
                     <svg
                       className={`w-4 h-4 transition-transform duration-200 ${showAllMovements ? 'rotate-180' : ''}`}
