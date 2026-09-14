@@ -375,7 +375,7 @@ export const HomePage: React.FC = () => {
 
           <Button variant="secondary" onClick={() => triggerCameraScan()}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7V4h3M17 4h3v3M4 17v3h3M20 17v3h-3M8 8v8M11 8v8M13 8v8M16 8v8" />
             </svg>
             Escanear Código
           </Button>
@@ -431,7 +431,7 @@ export const HomePage: React.FC = () => {
         {/* TAB: CATÁLOGO DE PRODUCTOS */}
         {activeSubTab === 'catalog' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-6 items-start">
-            {/* Alta de Producto */}
+            {/* Alta de Producto (Revelado Progresivo) */}
             <div className="lg:col-span-1 xl:col-span-4 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Nuevo Producto</h3>
@@ -456,62 +456,70 @@ export const HomePage: React.FC = () => {
                     type="button"
                     variant="secondary"
                     onClick={() => triggerCameraScan()}
-                    title="Escanear con cámara"
+                    title="Escanear código de barras"
                     className="px-3.5 shrink-0"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7V4h3M17 4h3v3M4 17v3h3M20 17v3h-3M8 8v8M11 8v8M13 8v8M16 8v8" />
                     </svg>
                   </Button>
                 </div>
 
-                <Input
-                  placeholder="Nombre del Producto"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  required
-                />
-
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="Precio ($)"
-                  value={newPrice}
-                  onChange={(e) => setNewPrice(e.target.value)}
-                  required
-                />
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[11px] font-semibold text-slate-500 block mb-1">Stock Inicial</label>
+                {newCode.trim().length > 0 ? (
+                  <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
                     <Input
-                      type="number"
-                      placeholder="Unidades"
-                      value={newStock}
-                      onChange={(e) => setNewStock(e.target.value)}
+                      placeholder="Nombre del Producto"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
                       required
                     />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-semibold text-slate-500 block mb-1">Stock Mínimo</label>
+
                     <Input
                       type="number"
-                      placeholder="Alerta Min"
-                      value={newMinStock}
-                      onChange={(e) => setNewMinStock(e.target.value)}
+                      step="0.01"
+                      placeholder="Precio ($)"
+                      value={newPrice}
+                      onChange={(e) => setNewPrice(e.target.value)}
                       required
                     />
-                  </div>
-                </div>
 
-                <Button type="submit" disabled={loadingProducts} className="mt-1">
-                  Crear Producto
-                </Button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[11px] font-semibold text-slate-500 block mb-1">Stock Inicial</label>
+                        <Input
+                          type="number"
+                          placeholder="Unidades"
+                          value={newStock}
+                          onChange={(e) => setNewStock(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold text-slate-500 block mb-1">Stock Mínimo</label>
+                        <Input
+                          type="number"
+                          placeholder="Alerta Min"
+                          value={newMinStock}
+                          onChange={(e) => setNewMinStock(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <Button type="submit" disabled={loadingProducts} className="mt-1">
+                      Crear Producto
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-slate-400 font-medium leading-relaxed bg-slate-50 border border-slate-100 p-2.5 rounded-lg text-center mt-1">
+                    💡 Ingresá o escaneá un código de barras para desplegar los datos del producto.
+                  </p>
+                )}
               </form>
             </div>
 
             {/* Listado de Productos (Mobile Cards + Desktop Table) */}
-            <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col min-h-[420px]">
+            <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col h-fit">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
                   Catálogo ({products.length > 10 && !showAllProducts ? `10 de ${products.length}` : products.length})
@@ -733,7 +741,7 @@ export const HomePage: React.FC = () => {
                     className="px-3.5 shrink-0"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7V4h3M17 4h3v3M4 17v3h3M20 17v3h-3M8 8v8M11 8v8M13 8v8M16 8v8" />
                     </svg>
                   </Button>
                 </div>
@@ -747,7 +755,10 @@ export const HomePage: React.FC = () => {
                       type="button"
                       variant={movementType === 'IN' ? 'primary' : 'secondary'}
                       className="flex-1"
-                      onClick={() => setMovementType('IN')}
+                      onClick={() => {
+                        setMovementType('IN');
+                        setHistoryFilter('IN');
+                      }}
                     >
                       Entrada (IN)
                     </Button>
@@ -755,7 +766,10 @@ export const HomePage: React.FC = () => {
                       type="button"
                       variant={movementType === 'OUT' ? 'danger' : 'secondary'}
                       className="flex-1"
-                      onClick={() => setMovementType('OUT')}
+                      onClick={() => {
+                        setMovementType('OUT');
+                        setHistoryFilter('OUT');
+                      }}
                     >
                       Salida (OUT)
                     </Button>
@@ -780,51 +794,71 @@ export const HomePage: React.FC = () => {
             </div>
 
             <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col min-h-[420px]">
-              {/* Cabecera del Histórico con Pills de Filtrado */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-100 pb-3.5">
-                <div>
+              {/* Cabecera del Histórico con Panel de Informe en 1 sola fila simétrica */}
+              <div className="flex flex-col gap-3 mb-4 border-b border-slate-100 pb-3.5">
+                <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
                     Histórico ({filteredMovements.length > 10 && !showAllMovements ? `10 de ${filteredMovements.length}` : filteredMovements.length})
                   </h3>
-                  <span className="text-xs text-slate-400 font-medium">Movimientos registrados</span>
+                  <span className="text-xs text-slate-400 font-medium">
+                    {historyFilter === 'ALL' ? 'Todos los registros' : historyFilter === 'IN' ? 'Filtrado: Entradas' : 'Filtrado: Salidas'}
+                  </span>
                 </div>
 
-                {/* Segmented Control / Pills de Filtrado */}
-                <div className="flex flex-wrap items-center gap-1.5 bg-slate-100/80 p-1 rounded-xl shrink-0 self-start sm:self-auto">
+                {/* Panel de Informe (3 columnas simétricas en una sola línea) */}
+                <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-50 border border-slate-200/80 rounded-xl w-full">
                   <button
                     type="button"
                     onClick={() => setHistoryFilter('ALL')}
-                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    className={`py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
                       historyFilter === 'ALL'
-                        ? 'bg-white text-slate-900 shadow-xs'
+                        ? 'bg-white shadow-2xs font-bold text-slate-900 border border-slate-200'
                         : 'text-slate-500 hover:text-slate-800'
                     }`}
+                    title="Ver todos los movimientos"
                   >
-                    Todos ({movements.length})
+                    <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total</span>
+                    <span className="block text-sm sm:text-base font-bold font-mono text-slate-900 leading-tight">
+                      {movements.length}
+                    </span>
                   </button>
+
                   <button
                     type="button"
-                    onClick={() => setHistoryFilter('IN')}
-                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                    onClick={() => {
+                      setHistoryFilter('IN');
+                      setMovementType('IN');
+                    }}
+                    className={`py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
                       historyFilter === 'IN'
-                        ? 'bg-emerald-600 text-white shadow-xs'
-                        : 'text-emerald-700 hover:bg-emerald-50'
+                        ? 'bg-emerald-50 text-emerald-800 font-bold border border-emerald-300 shadow-2xs'
+                        : 'text-emerald-600 hover:bg-emerald-50/50'
                     }`}
+                    title="Filtrar por Entradas"
                   >
-                    <span>↓ Entradas</span>
-                    <span className="font-mono text-[11px] opacity-90">({inCount})</span>
+                    <span className="block text-[10px] uppercase font-bold text-emerald-600 tracking-wider">↓ Entradas</span>
+                    <span className="block text-sm sm:text-base font-bold font-mono text-emerald-700 leading-tight">
+                      {inCount}
+                    </span>
                   </button>
+
                   <button
                     type="button"
-                    onClick={() => setHistoryFilter('OUT')}
-                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                    onClick={() => {
+                      setHistoryFilter('OUT');
+                      setMovementType('OUT');
+                    }}
+                    className={`py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
                       historyFilter === 'OUT'
-                        ? 'bg-rose-600 text-white shadow-xs'
-                        : 'text-rose-700 hover:bg-rose-50'
+                        ? 'bg-rose-50 text-rose-800 font-bold border border-rose-300 shadow-2xs'
+                        : 'text-rose-600 hover:bg-rose-50/50'
                     }`}
+                    title="Filtrar por Salidas"
                   >
-                    <span>↑ Salidas</span>
-                    <span className="font-mono text-[11px] opacity-90">({outCount})</span>
+                    <span className="block text-[10px] uppercase font-bold text-rose-600 tracking-wider">↑ Salidas</span>
+                    <span className="block text-sm sm:text-base font-bold font-mono text-rose-700 leading-tight">
+                      {outCount}
+                    </span>
                   </button>
                 </div>
               </div>
