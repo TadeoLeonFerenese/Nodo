@@ -62,5 +62,26 @@ describe('GeminiReceiptParser', () => {
     expect(items).toEqual([
       { name: 'Café Molido 250g', quantity: 5, code: '7799988811', unitPrice: 2400 },
     ]);
+
+    // Verificar que el payload use la convención oficial camelCase de Google
+    const lastCall = (global.fetch as any).mock.calls[0];
+    const requestBody = JSON.parse(lastCall[1].body);
+    expect(requestBody.contents[0].parts[1]).toHaveProperty('inlineData');
+    expect(requestBody.contents[0].parts[1].inlineData).toHaveProperty('mimeType', 'image/jpeg');
+    expect(requestBody.generationConfig).toHaveProperty('responseMimeType', 'application/json');
+  });
+
+  it('should extract error message from Google API error response', async () => {
+    const parser = new GeminiReceiptParser();
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      statusText: 'Bad Request',
+      text: async () => JSON.stringify({ error: { message: 'Invalid argument provided' } }),
+    } as any);
+
+    await expect(
+      parser.parseReceiptImage('test-image', 'AIzaSyTestKey', 'gemini-3.5-flash')
+    ).rejects.toThrow('Error en API de IA (400): Invalid argument provided');
   });
 });

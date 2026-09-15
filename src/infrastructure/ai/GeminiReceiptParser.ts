@@ -37,6 +37,13 @@ export class GeminiReceiptParser {
             .filter((name) => name.toLowerCase().includes('flash'));
 
           if (flashModels.length > 0) {
+            // Priorizar gemini-3.5-flash si está disponible en la cuenta
+            const preferred = flashModels.find((m) => m === 'gemini-3.5-flash');
+            if (preferred) {
+              GeminiReceiptParser.cachedModel = preferred;
+              return preferred;
+            }
+
             flashModels.sort((a, b) => {
               const matchA = a.match(/([0-9]+(?:\.[0-9]+)?)/);
               const matchB = b.match(/([0-9]+(?:\.[0-9]+)?)/);
@@ -107,8 +114,8 @@ export class GeminiReceiptParser {
                     text: 'Actúa como un sistema OCR de inventario. Extrae detalladamente todos los productos, sus cantidades numéricas y precio unitario si figura en este remito o factura. Devuelve ÚNICAMENTE un array JSON válido sin texto adicional, con el formato: [{"name": string, "quantity": number, "code": string, "unitPrice": number}]. Si no hay código visible, genera un código numérico razonable.',
                   },
                   {
-                    inline_data: {
-                      mime_type: 'image/jpeg',
+                    inlineData: {
+                      mimeType: 'image/jpeg',
                       data: cleanBase64,
                     },
                   },
@@ -117,7 +124,7 @@ export class GeminiReceiptParser {
             ],
             generationConfig: {
               temperature: 0.1,
-              response_mime_type: 'application/json',
+              responseMimeType: 'application/json',
             },
           }),
         }
@@ -126,7 +133,14 @@ export class GeminiReceiptParser {
       if (!response.ok) {
         const errText = await response.text();
         console.error(`[GeminiReceiptParser] API error (${response.status}):`, errText);
-        throw new Error(`Error en API de IA (${response.status}): ${response.statusText}`);
+        let errorDetail = response.statusText;
+        try {
+          const errJson = JSON.parse(errText);
+          if (errJson?.error?.message) {
+            errorDetail = errJson.error.message;
+          }
+        } catch {}
+        throw new Error(`Error en API de IA (${response.status}): ${errorDetail || 'Solicitud inválida'}`);
       }
 
       const data = await response.json();
