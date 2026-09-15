@@ -302,7 +302,7 @@ export const HomePage: React.FC = () => {
   const displayedDesktopMovements = showAllMovements ? filteredMovements : filteredMovements.slice(0, desktopMovementLimit);
   const hasMoreDesktopMovements = filteredMovements.length > desktopMovementLimit;
 
-  const mobileProductLimit = 3;
+  const mobileProductLimit = 2;
   const desktopProductLimit = 10;
 
   const displayedMobileProducts = showAllProducts ? products : products.slice(0, mobileProductLimit);
@@ -382,42 +382,28 @@ export const HomePage: React.FC = () => {
           </div>
         )}
 
-        {/* Escáner & Sub-Tabs (Línea única simétrica en Mobile) */}
-        <div className="bg-white border border-slate-200 rounded-xl p-2 sm:p-4 flex items-center justify-between gap-1.5 sm:gap-4 shadow-xs">
-          <div className="flex items-center gap-1 sm:gap-2">
-            <Button
-              variant={activeSubTab === 'catalog' ? 'primary' : 'ghost'}
-              onClick={() => setActiveSubTab('catalog')}
-              className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs"
-            >
-              Catálogo
-            </Button>
-            <Button
-              variant={activeSubTab === 'stock' ? 'primary' : 'ghost'}
-              onClick={() => setActiveSubTab('stock')}
-              className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs"
-            >
-              Movimientos
-            </Button>
-            <Button
-              variant={activeSubTab === 'receipt' ? 'primary' : 'ghost'}
-              onClick={() => setActiveSubTab('receipt')}
-              className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs"
-            >
-              Remito
-            </Button>
-          </div>
-
+        {/* Sub-Tabs de Navegación */}
+        <div className="bg-white border border-slate-200 rounded-xl p-1.5 sm:p-2 flex items-center gap-1 sm:gap-2 shadow-xs">
           <Button
-            variant="secondary"
-            onClick={() => triggerCameraScan()}
-            className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs shrink-0"
-            title="Escanear Código"
+            variant={activeSubTab === 'catalog' ? 'primary' : 'ghost'}
+            onClick={() => setActiveSubTab('catalog')}
+            className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs flex-1 sm:flex-initial"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7V4h3M17 4h3v3M4 17v3h3M20 17v3h-3M8 8v8M11 8v8M13 8v8M16 8v8" />
-            </svg>
-            <span className="hidden xs:inline sm:inline">Escanear</span>
+            Catálogo
+          </Button>
+          <Button
+            variant={activeSubTab === 'stock' ? 'primary' : 'ghost'}
+            onClick={() => setActiveSubTab('stock')}
+            className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs flex-1 sm:flex-initial"
+          >
+            Movimientos
+          </Button>
+          <Button
+            variant={activeSubTab === 'receipt' ? 'primary' : 'ghost'}
+            onClick={() => setActiveSubTab('receipt')}
+            className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs flex-1 sm:flex-initial"
+          >
+            Remito
           </Button>
         </div>
 
@@ -596,19 +582,19 @@ export const HomePage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-50">
-                      <span className="text-slate-500 text-[11px]">
+                    <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-50 gap-2">
+                      <span className="text-slate-500 text-[11px] truncate min-w-0">
                         Mínimo: <strong className="text-slate-700 font-mono">{p.minStock} u.</strong>
                       </span>
 
-                      {/* Controles directos de unidades móviles */}
-                      <div className="flex items-center gap-1.5">
+                      {/* Controles directos de unidades móviles (shrink-0 inquebrantable) */}
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
                           onClick={(e) => handleQuickUnitChange(e, p, -1)}
                           disabled={p.stock <= 0}
                           title="Restar 1 unidad"
-                          className="w-6.5 h-6.5 rounded-lg bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                          className="w-7 h-7 shrink-0 rounded-lg bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer active:scale-95 transition-all shadow-2xs"
                         >
                           -
                         </button>
@@ -618,7 +604,7 @@ export const HomePage: React.FC = () => {
                             setAdjustingProduct(p);
                             setIsAdjustModalOpen(true);
                           }}
-                          className="cursor-pointer"
+                          className="cursor-pointer shrink-0"
                           title="Toca para modificar unidades"
                         >
                           <Badge variant={p.stock <= p.minStock ? 'warning' : 'success'}>
@@ -629,7 +615,7 @@ export const HomePage: React.FC = () => {
                           type="button"
                           onClick={(e) => handleQuickUnitChange(e, p, 1)}
                           title="Sumar 1 unidad"
-                          className="w-6.5 h-6.5 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-600 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200 cursor-pointer"
+                          className="w-7 h-7 shrink-0 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-600 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200 cursor-pointer active:scale-95 transition-all shadow-2xs"
                         >
                           +
                         </button>
@@ -1178,8 +1164,14 @@ export const HomePage: React.FC = () => {
               </label>
               <div className="flex flex-wrap items-center gap-3">
                 <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-semibold border border-indigo-200 transition-colors shadow-2xs">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M3 9a2 2 0 012-2h3l2-3h4l2 3h3a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                    />
+                    <circle cx="12" cy="14" r="3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <span>Tomar Foto / Subir Imagen</span>
                   <input
