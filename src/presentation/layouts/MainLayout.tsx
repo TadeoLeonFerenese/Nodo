@@ -10,7 +10,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ currentTab, onTabChange,
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800 w-full max-w-full overflow-x-hidden pb-20 md:pb-0">
       {/* Top Bar / Header */}
-      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-3 shadow-xs sticky top-0 z-20 w-full max-w-full">
+      <header className="bg-white border-b border-slate-200 px-3 sm:px-6 lg:px-8 py-2 sm:py-3 shadow-xs sticky top-0 z-20 w-full max-w-full">
         <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center justify-center p-1.5 shrink-0">
@@ -60,7 +60,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ currentTab, onTabChange,
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto p-3.5 sm:p-6 lg:p-8">
+      <main className="flex-1 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto p-2.5 sm:p-6 lg:p-8">
         {children}
       </main>
 

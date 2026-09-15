@@ -282,11 +282,23 @@ export const HomePage: React.FC = () => {
     return m.type === historyFilter;
   });
 
-  const displayedMovements = showAllMovements ? filteredMovements : filteredMovements.slice(0, 10);
-  const hasMoreMovements = filteredMovements.length > 10;
+  const mobileMovementLimit = 3;
+  const desktopMovementLimit = 10;
 
-  const displayedProducts = showAllProducts ? products : products.slice(0, 10);
-  const hasMoreProducts = products.length > 10;
+  const displayedMobileMovements = showAllMovements ? filteredMovements : filteredMovements.slice(0, mobileMovementLimit);
+  const hasMoreMobileMovements = filteredMovements.length > mobileMovementLimit;
+
+  const displayedDesktopMovements = showAllMovements ? filteredMovements : filteredMovements.slice(0, desktopMovementLimit);
+  const hasMoreDesktopMovements = filteredMovements.length > desktopMovementLimit;
+
+  const mobileProductLimit = 3;
+  const desktopProductLimit = 10;
+
+  const displayedMobileProducts = showAllProducts ? products : products.slice(0, mobileProductLimit);
+  const hasMoreMobileProducts = products.length > mobileProductLimit;
+
+  const displayedDesktopProducts = showAllProducts ? products : products.slice(0, desktopProductLimit);
+  const hasMoreDesktopProducts = products.length > desktopProductLimit;
 
   return (
     <>
@@ -339,17 +351,17 @@ export const HomePage: React.FC = () => {
         </div>
       )}
 
-      <div className={`flex flex-col gap-6 ${isScanning ? 'scanner-hide-during-scan' : ''}`}>
+      <div className={`flex flex-col gap-3 sm:gap-6 ${isScanning ? 'scanner-hide-during-scan' : ''}`}>
         {/* Alertas de Stock Mínimo */}
         {lowStockProducts.length > 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col gap-2 shadow-xs">
-            <div className="flex items-center gap-2 text-amber-800 font-bold text-sm">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-4 flex flex-col gap-2 shadow-xs">
+            <div className="flex items-center gap-2 text-amber-800 font-bold text-xs sm:text-sm">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               Alertas de Stock Mínimo ({lowStockProducts.length})
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {lowStockProducts.map((p) => (
                 <Badge key={p.id} variant="warning">
                   {p.name} (Stock: {p.stock} / Min: {p.minStock})
@@ -359,38 +371,55 @@ export const HomePage: React.FC = () => {
           </div>
         )}
 
-        {/* Escáner & Sub-Tabs */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Button variant={activeSubTab === 'catalog' ? 'primary' : 'ghost'} onClick={() => setActiveSubTab('catalog')}>
+        {/* Escáner & Sub-Tabs (Línea única simétrica en Mobile) */}
+        <div className="bg-white border border-slate-200 rounded-xl p-2 sm:p-4 flex items-center justify-between gap-1.5 sm:gap-4 shadow-xs">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button
+              variant={activeSubTab === 'catalog' ? 'primary' : 'ghost'}
+              onClick={() => setActiveSubTab('catalog')}
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs"
+            >
               Catálogo
             </Button>
-            <Button variant={activeSubTab === 'stock' ? 'primary' : 'ghost'} onClick={() => setActiveSubTab('stock')}>
+            <Button
+              variant={activeSubTab === 'stock' ? 'primary' : 'ghost'}
+              onClick={() => setActiveSubTab('stock')}
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs"
+            >
               Movimientos
             </Button>
-            <Button variant={activeSubTab === 'receipt' ? 'primary' : 'ghost'} onClick={() => setActiveSubTab('receipt')}>
+            <Button
+              variant={activeSubTab === 'receipt' ? 'primary' : 'ghost'}
+              onClick={() => setActiveSubTab('receipt')}
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs"
+            >
               Remito
             </Button>
           </div>
 
-          <Button variant="secondary" onClick={() => triggerCameraScan()}>
+          <Button
+            variant="secondary"
+            onClick={() => triggerCameraScan()}
+            className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs shrink-0"
+            title="Escanear Código"
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7V4h3M17 4h3v3M4 17v3h3M20 17v3h-3M8 8v8M11 8v8M13 8v8M16 8v8" />
             </svg>
-            Escanear Código
+            <span className="hidden xs:inline sm:inline">Escanear</span>
           </Button>
         </div>
 
         {/* Banner informativo de escáner */}
         {scannedCode && (
-          <div className={`border rounded-xl p-3.5 text-xs font-semibold flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs ${
+          <div className={`border rounded-xl p-3 sm:p-3.5 text-xs font-semibold flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 shadow-xs ${
             scannedProduct
               ? 'bg-indigo-50 border-indigo-200 text-indigo-900'
               : 'bg-amber-50 border-amber-200 text-amber-900'
           }`}>
             <div className="flex items-start sm:items-center gap-2.5 min-w-0 flex-1">
               <span className="text-base shrink-0 mt-0.5 sm:mt-0">{scannedProduct ? '📦' : '⚠️'}</span>
-              <div className="break-words leading-relaxed">
+              <div className="break-words leading-relaxed text-[11px] sm:text-xs">
                 {scannedProduct ? (
                   <span>
                     Producto Escaneado: <strong>{scannedProduct.name}</strong> (Stock: <strong className="font-mono">{scannedProduct.stock} u.</strong>)
@@ -430,9 +459,9 @@ export const HomePage: React.FC = () => {
 
         {/* TAB: CATÁLOGO DE PRODUCTOS */}
         {activeSubTab === 'catalog' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-3 sm:gap-6 items-start">
             {/* Alta de Producto (Revelado Progresivo) */}
-            <div className="lg:col-span-1 xl:col-span-4 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
+            <div className="lg:col-span-1 xl:col-span-4 bg-white border border-slate-200 rounded-xl p-3.5 sm:p-6 shadow-xs flex flex-col gap-2.5 sm:gap-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Nuevo Producto</h3>
                 {newCode && (
@@ -519,22 +548,25 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Listado de Productos (Mobile Cards + Desktop Table) */}
-            <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col h-fit">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                  Catálogo ({products.length > 10 && !showAllProducts ? `10 de ${products.length}` : products.length})
+            <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-3.5 sm:p-6 shadow-xs flex flex-col h-fit">
+              <div className="flex items-center justify-between mb-2.5 sm:mb-4">
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider md:hidden">
+                  Catálogo ({products.length > mobileProductLimit && !showAllProducts ? `${mobileProductLimit} de ${products.length}` : products.length})
                 </h3>
-                <span className="text-xs text-slate-400 font-medium">Toca +/- para ajustar unidades</span>
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider hidden md:block">
+                  Catálogo ({products.length > desktopProductLimit && !showAllProducts ? `${desktopProductLimit} de ${products.length}` : products.length})
+                </h3>
+                <span className="text-[11px] sm:text-xs text-slate-400 font-medium">Toca +/- para ajustar unidades</span>
               </div>
 
-              {/* Vista Móvil: Cards apiladas y estilizadas */}
+              {/* Vista Móvil: Cards apiladas y estilizadas (Límite inicial 3 items para encuadre sin scroll) */}
               <div className="md:hidden flex flex-col divide-y divide-slate-100">
-                {displayedProducts.map((p) => (
-                  <div key={p.id} className="py-3.5 flex flex-col gap-2">
+                {displayedMobileProducts.map((p) => (
+                  <div key={p.id} className="py-2.5 flex flex-col gap-1.5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-slate-900 text-sm leading-snug break-words">{p.name}</h4>
-                        <span className="font-mono text-xs text-slate-400 mt-0.5 inline-block">Cód: {p.code}</span>
+                        <span className="font-mono text-[11px] text-slate-400 mt-0.5 inline-block">Cód: {p.code}</span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <span className="font-mono font-bold text-sm text-indigo-600">
@@ -553,8 +585,8 @@ export const HomePage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs pt-1.5 border-t border-slate-50">
-                      <span className="text-slate-500">
+                    <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-50">
+                      <span className="text-slate-500 text-[11px]">
                         Mínimo: <strong className="text-slate-700 font-mono">{p.minStock} u.</strong>
                       </span>
 
@@ -565,7 +597,7 @@ export const HomePage: React.FC = () => {
                           onClick={(e) => handleQuickUnitChange(e, p, -1)}
                           disabled={p.stock <= 0}
                           title="Restar 1 unidad"
-                          className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 font-bold text-sm flex items-center justify-center border border-slate-200 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                          className="w-6.5 h-6.5 rounded-lg bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                         >
                           -
                         </button>
@@ -586,7 +618,7 @@ export const HomePage: React.FC = () => {
                           type="button"
                           onClick={(e) => handleQuickUnitChange(e, p, 1)}
                           title="Sumar 1 unidad"
-                          className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-600 text-slate-700 font-bold text-sm flex items-center justify-center border border-slate-200 cursor-pointer"
+                          className="w-6.5 h-6.5 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-600 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200 cursor-pointer"
                         >
                           +
                         </button>
@@ -598,6 +630,31 @@ export const HomePage: React.FC = () => {
                   <div className="py-8 text-center text-slate-400 text-xs">Sin productos registrados aún.</div>
                 )}
               </div>
+
+              {/* Botón desplegable Ver más productos (Mobile) */}
+              {hasMoreMobileProducts && (
+                <div className="md:hidden pt-2 mt-2 border-t border-slate-100 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllProducts((prev) => !prev)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 active:scale-95 rounded-xl border border-indigo-100/60 transition-all cursor-pointer shadow-2xs"
+                  >
+                    <span>
+                      {showAllProducts
+                        ? 'Ver menos productos'
+                        : `Ver más (${products.length - mobileProductLimit} productos restantes)`}
+                    </span>
+                    <svg
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${showAllProducts ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
 
               {/* Vista Desktop / Tablet: Tabla espaciosa con ajuste de stock */}
               <div className="hidden md:block overflow-x-auto">
@@ -613,7 +670,7 @@ export const HomePage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-medium">
-                    {displayedProducts.map((p) => (
+                    {displayedDesktopProducts.map((p) => (
                       <tr key={p.id} className="hover:bg-slate-50 transition-colors">
                         <td className="py-3.5 px-4 font-mono text-slate-600">{p.code}</td>
                         <td className="py-3.5 px-4 font-bold text-slate-900">{p.name}</td>
@@ -675,9 +732,9 @@ export const HomePage: React.FC = () => {
                 </table>
               </div>
 
-              {/* Botón desplegable Ver más productos */}
-              {hasMoreProducts && (
-                <div className="pt-3.5 mt-2 border-t border-slate-100 flex justify-center">
+              {/* Botón desplegable Ver más productos (Desktop) */}
+              {hasMoreDesktopProducts && (
+                <div className="hidden md:flex pt-3.5 mt-2 border-t border-slate-100 justify-center">
                   <button
                     type="button"
                     onClick={() => setShowAllProducts((prev) => !prev)}
@@ -686,7 +743,7 @@ export const HomePage: React.FC = () => {
                     <span>
                       {showAllProducts
                         ? 'Ver menos productos (mostrar 10)'
-                        : `Ver más (${products.length - 10} productos restantes)`}
+                        : `Ver más (${products.length - desktopProductLimit} productos restantes)`}
                     </span>
                     <svg
                       className={`w-4 h-4 transition-transform duration-200 ${showAllProducts ? 'rotate-180' : ''}`}
@@ -705,13 +762,13 @@ export const HomePage: React.FC = () => {
 
         {/* TAB: CONTROL TRANSACCIONAL DE STOCK */}
         {activeSubTab === 'stock' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-6 items-start">
-            <div className="lg:col-span-1 xl:col-span-4 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-3 sm:gap-6 items-start">
+            <div className="lg:col-span-1 xl:col-span-4 bg-white border border-slate-200 rounded-xl p-3.5 sm:p-6 shadow-xs flex flex-col gap-2.5 sm:gap-4">
               <div>
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Registrar Movimiento Manual</h3>
                 <p className="text-xs text-slate-500 mt-0.5">Ingreso o egreso manual de mercadería</p>
               </div>
-              <form onSubmit={handleRecordMovement} className="flex flex-col gap-3">
+              <form onSubmit={handleRecordMovement} className="flex flex-col gap-2.5 sm:gap-3">
                 <div className="flex gap-2 items-center">
                   <div className="relative flex-1 min-w-0">
                     <select
@@ -746,14 +803,14 @@ export const HomePage: React.FC = () => {
                   </Button>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1 sm:gap-1.5">
                   <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
                     Tipo de operación a registrar
                   </label>
                   <div className="flex gap-2">
                     <Button
                       type="button"
-                      variant={movementType === 'IN' ? 'primary' : 'secondary'}
+                      variant={movementType === 'IN' ? 'success' : 'secondary'}
                       className="flex-1"
                       onClick={() => {
                         setMovementType('IN');
@@ -793,12 +850,15 @@ export const HomePage: React.FC = () => {
               </form>
             </div>
 
-            <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col min-h-[420px]">
+            <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-3.5 sm:p-6 shadow-xs flex flex-col h-fit">
               {/* Cabecera del Histórico con Panel de Informe en 1 sola fila simétrica */}
-              <div className="flex flex-col gap-3 mb-4 border-b border-slate-100 pb-3.5">
+              <div className="flex flex-col gap-2.5 sm:gap-3 mb-2.5 sm:mb-4 border-b border-slate-100 pb-2.5 sm:pb-3.5">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                    Histórico ({filteredMovements.length > 10 && !showAllMovements ? `10 de ${filteredMovements.length}` : filteredMovements.length})
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider md:hidden">
+                    Histórico ({filteredMovements.length > mobileMovementLimit && !showAllMovements ? `${mobileMovementLimit} de ${filteredMovements.length}` : filteredMovements.length})
+                  </h3>
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider hidden md:block">
+                    Histórico ({filteredMovements.length > desktopMovementLimit && !showAllMovements ? `${desktopMovementLimit} de ${filteredMovements.length}` : filteredMovements.length})
                   </h3>
                   <span className="text-xs text-slate-400 font-medium">
                     {historyFilter === 'ALL' ? 'Todos los registros' : historyFilter === 'IN' ? 'Filtrado: Entradas' : 'Filtrado: Salidas'}
@@ -806,19 +866,19 @@ export const HomePage: React.FC = () => {
                 </div>
 
                 {/* Panel de Informe (3 columnas simétricas en una sola línea) */}
-                <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-50 border border-slate-200/80 rounded-xl w-full">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2 p-1 sm:p-1.5 bg-slate-50 border border-slate-200/80 rounded-xl w-full">
                   <button
                     type="button"
                     onClick={() => setHistoryFilter('ALL')}
-                    className={`py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
+                    className={`py-1 sm:py-1.5 px-1.5 sm:px-2 rounded-lg text-center transition-all cursor-pointer ${
                       historyFilter === 'ALL'
                         ? 'bg-white shadow-2xs font-bold text-slate-900 border border-slate-200'
                         : 'text-slate-500 hover:text-slate-800'
                     }`}
                     title="Ver todos los movimientos"
                   >
-                    <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total</span>
-                    <span className="block text-sm sm:text-base font-bold font-mono text-slate-900 leading-tight">
+                    <span className="block text-[9px] sm:text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total</span>
+                    <span className="block text-xs sm:text-base font-bold font-mono text-slate-900 leading-tight">
                       {movements.length}
                     </span>
                   </button>
@@ -829,15 +889,15 @@ export const HomePage: React.FC = () => {
                       setHistoryFilter('IN');
                       setMovementType('IN');
                     }}
-                    className={`py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
+                    className={`py-1 sm:py-1.5 px-1.5 sm:px-2 rounded-lg text-center transition-all cursor-pointer ${
                       historyFilter === 'IN'
                         ? 'bg-emerald-50 text-emerald-800 font-bold border border-emerald-300 shadow-2xs'
                         : 'text-emerald-600 hover:bg-emerald-50/50'
                     }`}
                     title="Filtrar por Entradas"
                   >
-                    <span className="block text-[10px] uppercase font-bold text-emerald-600 tracking-wider">↓ Entradas</span>
-                    <span className="block text-sm sm:text-base font-bold font-mono text-emerald-700 leading-tight">
+                    <span className="block text-[9px] sm:text-[10px] uppercase font-bold text-emerald-600 tracking-wider">↓ Entradas</span>
+                    <span className="block text-xs sm:text-base font-bold font-mono text-emerald-700 leading-tight">
                       {inCount}
                     </span>
                   </button>
@@ -848,15 +908,15 @@ export const HomePage: React.FC = () => {
                       setHistoryFilter('OUT');
                       setMovementType('OUT');
                     }}
-                    className={`py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
+                    className={`py-1 sm:py-1.5 px-1.5 sm:px-2 rounded-lg text-center transition-all cursor-pointer ${
                       historyFilter === 'OUT'
                         ? 'bg-rose-50 text-rose-800 font-bold border border-rose-300 shadow-2xs'
                         : 'text-rose-600 hover:bg-rose-50/50'
                     }`}
                     title="Filtrar por Salidas"
                   >
-                    <span className="block text-[10px] uppercase font-bold text-rose-600 tracking-wider">↑ Salidas</span>
-                    <span className="block text-sm sm:text-base font-bold font-mono text-rose-700 leading-tight">
+                    <span className="block text-[9px] sm:text-[10px] uppercase font-bold text-rose-600 tracking-wider">↑ Salidas</span>
+                    <span className="block text-xs sm:text-base font-bold font-mono text-rose-700 leading-tight">
                       {outCount}
                     </span>
                   </button>
@@ -865,21 +925,21 @@ export const HomePage: React.FC = () => {
 
               {/* Vista Móvil: Cards apiladas con detalle del producto */}
               <div className="md:hidden flex flex-col divide-y divide-slate-100">
-                {displayedMovements.map((m) => {
+                {displayedMobileMovements.map((m) => {
                   const product = productMap.get(m.productId);
                   const productName = m.productName || product?.name || 'Producto no identificado';
                   const productCode = m.productCode || product?.code || 'S/C';
                   const isEntry = m.type === 'IN';
 
                   return (
-                    <div key={m.id} className="py-3.5 flex flex-col gap-2 transition-colors hover:bg-slate-50/70 rounded-lg px-2 -mx-2">
+                    <div key={m.id} className="py-2.5 flex flex-col gap-1.5 transition-colors hover:bg-slate-50/70 rounded-lg px-2 -mx-2">
                       {/* Fila 1: Producto y Unidades */}
-                      <div className="flex items-start justify-between gap-2.5">
+                      <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-slate-900 text-sm leading-snug break-words">
+                          <h4 className="font-bold text-slate-900 text-xs sm:text-sm leading-snug break-words">
                             {productName}
                           </h4>
-                          <span className="font-mono text-[11px] text-slate-400 block mt-0.5">
+                          <span className="font-mono text-[10px] text-slate-400 block mt-0.5">
                             Cód: {productCode}
                           </span>
                         </div>
@@ -889,7 +949,7 @@ export const HomePage: React.FC = () => {
                             {isEntry ? '↓ Entrada' : '↑ Salida'}
                           </Badge>
                           <span
-                            className={`font-mono font-bold text-sm ${
+                            className={`font-mono font-bold text-xs sm:text-sm ${
                               isEntry ? 'text-emerald-600' : 'text-rose-600'
                             }`}
                           >
@@ -899,11 +959,11 @@ export const HomePage: React.FC = () => {
                       </div>
 
                       {/* Fila 2: Motivo y Fecha */}
-                      <div className="flex items-center justify-between text-xs pt-1.5 border-t border-slate-50 text-slate-500">
-                        <span className="truncate max-w-[210px]" title={m.reason}>
+                      <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-50 text-slate-500">
+                        <span className="truncate max-w-[200px]" title={m.reason}>
                           {m.reason || (isEntry ? 'Ingreso registrado' : 'Egreso registrado')}
                         </span>
-                        <span className="font-mono text-[11px] text-slate-400 shrink-0">
+                        <span className="font-mono text-[10px] text-slate-400 shrink-0">
                           {new Date(m.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit' })}{' '}
                           {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
@@ -912,13 +972,38 @@ export const HomePage: React.FC = () => {
                   );
                 })}
                 {filteredMovements.length === 0 && (
-                  <div className="py-8 text-center text-slate-400 text-xs font-medium">
+                  <div className="py-6 text-center text-slate-400 text-xs font-medium">
                     {historyFilter === 'IN' && 'No hay movimientos de entrada registrados.'}
                     {historyFilter === 'OUT' && 'No hay movimientos de salida registrados.'}
                     {historyFilter === 'ALL' && 'Sin movimientos registrados aún.'}
                   </div>
                 )}
               </div>
+
+              {/* Botón desplegable Ver más movimientos (Mobile) */}
+              {hasMoreMobileMovements && (
+                <div className="pt-2.5 mt-1 border-t border-slate-100 flex justify-center md:hidden">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllMovements((prev) => !prev)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 active:scale-95 rounded-xl border border-indigo-100/60 transition-all cursor-pointer shadow-2xs"
+                  >
+                    <span>
+                      {showAllMovements
+                        ? `Ver menos movimientos (mostrar ${mobileMovementLimit})`
+                        : `Ver más (${filteredMovements.length - mobileMovementLimit} movimientos restantes)`}
+                    </span>
+                    <svg
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${showAllMovements ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
 
               {/* Vista Desktop / Tablet: Tabla detallada */}
               <div className="hidden md:block overflow-x-auto">
@@ -933,7 +1018,7 @@ export const HomePage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-medium">
-                    {displayedMovements.map((m) => {
+                    {displayedDesktopMovements.map((m) => {
                       const product = productMap.get(m.productId);
                       const productName = m.productName || product?.name || 'Producto';
                       const productCode = m.productCode || product?.code || 'S/C';
@@ -979,8 +1064,8 @@ export const HomePage: React.FC = () => {
               </div>
 
               {/* Botón desplegable Ver más movimientos */}
-              {hasMoreMovements && (
-                <div className="pt-3.5 mt-2 border-t border-slate-100 flex justify-center">
+              {hasMoreDesktopMovements && (
+                <div className="pt-3.5 mt-2 border-t border-slate-100 hidden md:flex justify-center">
                   <button
                     type="button"
                     onClick={() => setShowAllMovements((prev) => !prev)}
@@ -988,8 +1073,8 @@ export const HomePage: React.FC = () => {
                   >
                     <span>
                       {showAllMovements
-                        ? 'Ver menos movimientos (mostrar 10)'
-                        : `Ver más (${filteredMovements.length - 10} movimientos restantes)`}
+                        ? `Ver menos movimientos (mostrar ${desktopMovementLimit})`
+                        : `Ver más (${filteredMovements.length - desktopMovementLimit} movimientos restantes)`}
                     </span>
                     <svg
                       className={`w-4 h-4 transition-transform duration-200 ${showAllMovements ? 'rotate-180' : ''}`}
