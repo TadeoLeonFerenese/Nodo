@@ -59,6 +59,8 @@ export const useProductStore = create<ProductState>((set, get) => ({
     try {
       const updated = await updateUseCase.execute(id, input);
       await get().loadProducts();
+      useStockStore.getState().loadLowStockAlerts().catch(() => {});
+      useStockStore.getState().loadMovements().catch(() => {});
       set({ isLoading: false });
       useSyncStore.getState().syncNow().catch(() => {});
       return updated;
@@ -73,6 +75,8 @@ export const useProductStore = create<ProductState>((set, get) => ({
     try {
       await deleteUseCase.execute(id);
       await get().loadProducts();
+      useStockStore.getState().loadLowStockAlerts().catch(() => {});
+      useStockStore.getState().loadMovements().catch(() => {});
       set({ isLoading: false });
       useSyncStore.getState().syncNow().catch(() => {});
     } catch (err) {

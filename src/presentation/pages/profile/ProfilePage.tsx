@@ -3,6 +3,7 @@ import { useAuthStore } from '../../../application/stores/useAuthStore';
 import { Button } from '../../components/atoms/Button';
 import { Badge } from '../../components/atoms/Badge';
 import { WifiSyncCard } from '../../components/molecules/WifiSyncCard';
+import { AiConfigCard } from '../../components/molecules/AiConfigCard';
 
 export const ProfilePage: React.FC = () => {
   const { currentUser, logout } = useAuthStore();
@@ -37,6 +38,9 @@ export const ProfilePage: React.FC = () => {
           Cerrar Sesión Local
         </Button>
       </div>
+
+      {/* Configuración de IA (Google Gemini) */}
+      <AiConfigCard />
 
       {/* Sincronización Local Wi-Fi */}
       <WifiSyncCard />

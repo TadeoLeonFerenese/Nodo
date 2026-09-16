@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from './application/stores/useAuthStore';
 import { useSyncStore } from './application/stores/useSyncStore';
+import { useAiStore } from './application/stores/useAiStore';
 import { RegisterPage } from './presentation/pages/auth/RegisterPage';
 import { HomePage } from './presentation/pages/home/HomePage';
 import { ProfilePage } from './presentation/pages/profile/ProfilePage';
@@ -13,6 +14,7 @@ export function App() {
   useEffect(() => {
     checkCurrentUser();
     useSyncStore.getState().initSyncEngine();
+    useAiStore.getState().initAiEngine();
   }, [checkCurrentUser]);
 
   if (!isAuthenticated) {
@@ -21,7 +23,9 @@ export function App() {
 
   return (
     <MainLayout currentTab={currentTab} onTabChange={setCurrentTab}>
-      {currentTab === 'home' && <HomePage />}
+      {currentTab === 'home' && (
+        <HomePage onNavigateToProfile={() => setCurrentTab('profile')} />
+      )}
       {currentTab === 'profile' && <ProfilePage />}
     </MainLayout>
   );

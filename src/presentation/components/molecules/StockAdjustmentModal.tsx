@@ -7,7 +7,13 @@ interface StockAdjustmentModalProps {
   product: Product | null;
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (productId: string, type: 'IN' | 'OUT', quantity: number, reason: string) => Promise<void>;
+  onConfirm: (
+    productId: string,
+    type: 'IN' | 'OUT',
+    quantity: number,
+    reason: string,
+    newPrice?: number
+  ) => Promise<void>;
 }
 
 export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
@@ -17,16 +23,18 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
   onConfirm,
 }) => {
   const [type, setType] = useState<'IN' | 'OUT'>('IN');
-  const [quantity, setQuantity] = useState<number>(1);
-  const [reason, setReason] = useState<string>('Ajuste por escaneo');
+  const [quantity, setQuantity] = useState<number>(0);
+  const [price, setPrice] = useState<string>('');
+  const [reason, setReason] = useState<string>('Ajuste de inventario');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && product) {
-      setQuantity(1);
+      setQuantity(0);
+      setPrice(product.price.toString());
       setType('IN');
-      setReason('Ajuste por escaneo');
+      setReason('Ajuste de inventario');
       setErrorMsg(null);
     }
   }, [isOpen, product]);
@@ -37,16 +45,28 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
   const nextStock = type === 'IN' ? currentStock + quantity : currentStock - quantity;
   const isNegativeStock = type === 'OUT' && nextStock < 0;
 
+  const parsedPrice = parseFloat(price);
+  const isPriceValid = !isNaN(parsedPrice) && parsedPrice >= 0;
+  const hasPriceChanged = isPriceValid && parsedPrice !== product.price;
+  const hasStockChanged = quantity > 0;
+
   const handleQuickAdd = (amount: number) => {
-    setQuantity((prev) => Math.max(1, prev + amount));
+    setQuantity((prev) => prev + amount);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (quantity <= 0) {
-      setErrorMsg('La cantidad debe ser mayor a 0');
+
+    if (!isPriceValid) {
+      setErrorMsg('El precio debe ser un número válido mayor o igual a 0');
       return;
     }
+
+    if (!hasStockChanged && !hasPriceChanged) {
+      setErrorMsg('No se realizaron cambios en el precio ni en el stock.');
+      return;
+    }
+
     if (isNegativeStock) {
       setErrorMsg(`Stock insuficiente. Stock actual: ${currentStock} u.`);
       return;
@@ -55,13 +75,26 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
     setIsSubmitting(true);
     setErrorMsg(null);
     try {
-      await onConfirm(product.id, type, quantity, reason || (type === 'IN' ? 'Entrada rápida' : 'Salida rápida'));
+      await onConfirm(
+        product.id,
+        type,
+        quantity,
+        reason || (type === 'IN' ? 'Entrada de stock' : 'Salida de stock'),
+        hasPriceChanged ? parsedPrice : undefined
+      );
       onClose();
     } catch (err) {
       setErrorMsg((err as Error).message);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const getSubmitLabel = () => {
+    if (isSubmitting) return 'Guardando...';
+    if (hasPriceChanged && !hasStockChanged) return 'Actualizar Precio';
+    if (hasPriceChanged && hasStockChanged) return 'Guardar Cambios';
+    return `Confirmar ${type === 'IN' ? 'Entrada' : 'Salida'}`;
   };
 
   return (
@@ -77,7 +110,7 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
               {product.name}
             </h3>
             <span className="text-xs text-slate-500 font-mono">
-              Precio: ${product.price.toFixed(2)}
+              Precio Actual: ${product.price.toFixed(2)}
             </span>
           </div>
           <div className="flex flex-col items-end shrink-0">
@@ -95,10 +128,38 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+          {/* Edición de Precio */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                Precio Unitario ($)
+              </label>
+              {hasPriceChanged && (
+                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100/60">
+                  Modificado
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 font-bold text-sm">
+                $
+              </span>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="0.00"
+                className="w-full h-10 pl-8 pr-3.5 text-sm font-bold font-mono text-slate-900 bg-white border border-slate-300 rounded-xl focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 focus:outline-none transition-all"
+              />
+            </div>
+          </div>
+
           {/* Tipo de Operación: Entrada / Salida */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-              Tipo de Movimiento
+              Ajuste de Unidades (Opcional)
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -135,13 +196,18 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
 
           {/* Cantidad / Selector de Unidades */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-              Unidades a {type === 'IN' ? 'Ingresar' : 'Egresar'}
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-semibold text-slate-500">
+                Unidades a {type === 'IN' ? 'Ingresar' : 'Egresar'}
+              </label>
+              {quantity === 0 && (
+                <span className="text-[10px] text-slate-400 font-medium">0 = Sin movimiento de stock</span>
+              )}
+            </div>
             <div className="flex items-center gap-2 sm:gap-3 w-full">
               <button
                 type="button"
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                onClick={() => setQuantity((q) => Math.max(0, q - 1))}
                 className="w-11 h-11 shrink-0 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 border border-slate-300 text-slate-800 font-bold text-xl flex items-center justify-center transition-all cursor-pointer select-none"
                 aria-label="Disminuir unidades"
               >
@@ -150,9 +216,9 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
               <div className="flex-1 min-w-0">
                 <input
                   type="number"
-                  min="1"
+                  min="0"
                   value={quantity}
-                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                  onChange={(e) => setQuantity(Math.max(0, parseInt(e.target.value) || 0))}
                   className="w-full h-11 text-center text-xl sm:text-2xl font-bold font-mono text-slate-900 bg-white border border-slate-300 rounded-xl focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 focus:outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
@@ -189,25 +255,33 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
           }`}>
             <span>Stock resultante:</span>
             <div className="flex items-center gap-1.5 font-mono">
-              <span className="line-through text-slate-400">{currentStock} u.</span>
-              <span>➔</span>
-              <strong className={`text-sm ${isNegativeStock ? 'text-rose-600' : 'text-indigo-600'}`}>
-                {nextStock} u.
-              </strong>
+              {quantity === 0 ? (
+                <strong className="text-slate-700">{currentStock} u. (sin cambios)</strong>
+              ) : (
+                <>
+                  <span className="line-through text-slate-400">{currentStock} u.</span>
+                  <span>➔</span>
+                  <strong className={`text-sm ${isNegativeStock ? 'text-rose-600' : 'text-indigo-600'}`}>
+                    {nextStock} u.
+                  </strong>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Motivo Opcional */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-semibold text-slate-500">Motivo / Detalle</label>
-            <input
-              type="text"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Ej. Ingreso por escaneo, venta, recuento..."
-              className="w-full min-w-0 px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 focus:outline-none transition-all text-slate-900 placeholder-slate-400"
-            />
-          </div>
+          {/* Motivo Opcional (sólo relevante si hay movimiento de stock) */}
+          {hasStockChanged && (
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] font-semibold text-slate-500">Motivo del Movimiento</label>
+              <input
+                type="text"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Ej. Ingreso por escaneo, venta, recuento..."
+                className="w-full min-w-0 px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 focus:outline-none transition-all text-slate-900 placeholder-slate-400"
+              />
+            </div>
+          )}
 
           {/* Botones de acción */}
           <div className="flex gap-2 pt-1">
@@ -216,11 +290,11 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
             </Button>
             <Button
               type="submit"
-              variant={type === 'IN' ? 'primary' : 'danger'}
+              variant={!hasStockChanged && hasPriceChanged ? 'primary' : type === 'IN' ? 'primary' : 'danger'}
               className="flex-1 py-2.5 text-xs sm:text-sm"
-              disabled={isSubmitting || isNegativeStock || quantity <= 0}
+              disabled={isSubmitting || isNegativeStock || (!hasStockChanged && !hasPriceChanged) || !isPriceValid}
             >
-              {isSubmitting ? 'Guardando...' : `Confirmar ${type === 'IN' ? 'Entrada' : 'Salida'}`}
+              {getSubmitLabel()}
             </Button>
           </div>
         </form>

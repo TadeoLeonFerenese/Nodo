@@ -70,6 +70,17 @@ export class MockSqliteDriver implements IDatabaseDriver {
       return;
     }
 
+    // UPDATE products SET stock = ?, updated_at = ? WHERE id = ?
+    if (/^UPDATE products SET stock =/i.test(cleanSql)) {
+      const [stock, updated_at, targetId] = params as any[];
+      const prod = this.tables.products.find((p) => p.id === targetId);
+      if (prod) {
+        prod.stock = stock;
+        prod.updated_at = updated_at;
+      }
+      return;
+    }
+
     // UPDATE products SET ... WHERE id = ?
     if (/^UPDATE products/i.test(cleanSql)) {
       const targetId = params[params.length - 1];
@@ -116,6 +127,12 @@ export class MockSqliteDriver implements IDatabaseDriver {
       const targetId = params[0];
       const found = this.tables.products.filter((p) => p.id === targetId);
       return found as T[];
+    }
+
+    // SELECT * FROM products WHERE stock <= min_stock
+    if (/SELECT [\s\S]* FROM products WHERE stock <= min_stock/i.test(cleanSql)) {
+      const lowStock = this.tables.products.filter((p) => p.stock <= p.min_stock);
+      return [...lowStock] as T[];
     }
 
     // SELECT * FROM products

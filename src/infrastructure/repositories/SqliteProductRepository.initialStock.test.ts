@@ -54,4 +54,51 @@ describe('SqliteProductRepository - Stock Inicial Atómico', () => {
     const movements = await stockRepo.getMovementsByProduct(product.id);
     expect(movements.length).toBe(0);
   });
+
+  it('debe registrar exactamente la cantidad del remito sin duplicar al crear con stock 0 y registrar movimiento', async () => {
+    const code = `TEST-REMITO-${Date.now()}`;
+    const product = await productRepo.create({
+      code,
+      name: 'Aceite Remito Test',
+      price: 1200,
+      stock: 0,
+      minStock: 2,
+    });
+
+    expect(product.stock).toBe(0);
+
+    const mov = await stockRepo.recordMovement({
+      productId: product.id,
+      type: 'IN',
+      quantity: 2,
+      reason: 'Alta catálogo desde Remito IA',
+    });
+
+    expect(mov.quantity).toBe(2);
+
+    const refreshed = await productRepo.findById(product.id);
+    expect(refreshed?.stock).toBe(2); // Exactly 2, not 4!
+  });
+
+  it('debe desaparecer de las alertas de stock bajo al ser eliminado el producto', async () => {
+    const code = `TEST-LOW-${Date.now()}`;
+    const product = await productRepo.create({
+      code,
+      name: 'Producto Poco Stock',
+      price: 100,
+      stock: 1,
+      minStock: 5,
+    });
+
+    // 1. Verificar que aparece en alertas de stock bajo
+    const alertsBefore = await stockRepo.getLowStockProducts();
+    expect(alertsBefore.some((p) => p.id === product.id)).toBe(true);
+
+    // 2. Eliminar el producto
+    await productRepo.delete(product.id);
+
+    // 3. Verificar que desapareció de las alertas de stock bajo
+    const alertsAfter = await stockRepo.getLowStockProducts();
+    expect(alertsAfter.some((p) => p.id === product.id)).toBe(false);
+  });
 });
