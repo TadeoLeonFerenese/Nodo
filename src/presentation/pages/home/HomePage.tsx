@@ -901,17 +901,17 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
               <div className="flex flex-col gap-2.5 sm:gap-3 mb-2.5 sm:mb-4 border-b border-slate-100 pb-2.5 sm:pb-3.5">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider md:hidden">
-                    Histórico ({filteredMovements.length > mobileMovementLimit && !showAllMovements ? `${mobileMovementLimit} de ${filteredMovements.length}` : filteredMovements.length})
+                    Historial de Movimientos ({filteredMovements.length > mobileMovementLimit && !showAllMovements ? `${mobileMovementLimit} de ${filteredMovements.length}` : filteredMovements.length})
                   </h3>
                   <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider hidden md:block">
-                    Histórico ({filteredMovements.length > desktopMovementLimit && !showAllMovements ? `${desktopMovementLimit} de ${filteredMovements.length}` : filteredMovements.length})
+                    Historial de Movimientos ({filteredMovements.length > desktopMovementLimit && !showAllMovements ? `${desktopMovementLimit} de ${filteredMovements.length}` : filteredMovements.length})
                   </h3>
                   <span className="text-xs text-slate-400 font-medium">
                     {historyFilter === 'ALL' ? 'Todos los registros' : historyFilter === 'IN' ? 'Filtrado: Entradas' : 'Filtrado: Salidas'}
                   </span>
                 </div>
 
-                {/* Panel de Informe (3 columnas simétricas en una sola línea) */}
+                {/* Panel de Informe (3 columnas simétricas en una sola línea) - COMENTADO TEMPORALMENTE
                 <div className="grid grid-cols-3 gap-1.5 sm:gap-2 p-1 sm:p-1.5 bg-slate-50 border border-slate-200/80 rounded-xl w-full">
                   <button
                     type="button"
@@ -967,6 +967,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
                     </span>
                   </button>
                 </div>
+                */}
               </div>
 
               {/* Vista Móvil: Cards apiladas con detalle del producto */}
