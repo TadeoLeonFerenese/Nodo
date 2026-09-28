@@ -299,7 +299,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
     return m.type === historyFilter;
   });
 
-  const mobileMovementLimit = 3;
+  const mobileMovementLimit = 4;
   const desktopMovementLimit = 10;
 
   const displayedMobileMovements = showAllMovements ? filteredMovements : filteredMovements.slice(0, mobileMovementLimit);
@@ -308,7 +308,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
   const displayedDesktopMovements = showAllMovements ? filteredMovements : filteredMovements.slice(0, desktopMovementLimit);
   const hasMoreDesktopMovements = filteredMovements.length > desktopMovementLimit;
 
-  const mobileProductLimit = 3;
+  const mobileProductLimit = 4;
   const desktopProductLimit = 10;
 
   const displayedMobileProducts = showAllProducts ? products : products.slice(0, mobileProductLimit);
@@ -370,7 +370,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
         </div>
       )}
 
-      <div className={`flex flex-col gap-3 sm:gap-6 h-full ${isScanning ? 'scanner-hide-during-scan' : ''}`}>
+      <div className={`flex-1 flex flex-col gap-3 sm:gap-6 ${isScanning ? 'scanner-hide-during-scan' : ''}`}>
         {/* Alertas de Stock Mínimo */}
         {activeLowStockProducts.length > 0 && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-4 flex flex-col gap-2 shadow-xs">
@@ -402,7 +402,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
         )}
 
         {/* Sub-Tabs de Navegación */}
-        <div className="bg-white border border-slate-200 rounded-xl p-1.5 sm:p-2 flex items-center gap-1 sm:gap-2 shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-xl p-1.5 sm:p-2 flex items-center gap-1 sm:gap-2 shadow-xs shrink-0 w-full">
           <Button
             variant={activeSubTab === 'catalog' ? 'primary' : 'ghost'}
             onClick={() => setActiveSubTab('catalog')}
@@ -475,9 +475,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
 
         {/* TAB: CATÁLOGO DE PRODUCTOS */}
         {activeSubTab === 'catalog' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-2.5 sm:gap-6 items-start flex-1">
+          <div className="flex-1 min-h-0 w-full flex flex-col lg:grid lg:grid-cols-3 xl:grid-cols-12 gap-2.5 sm:gap-6 lg:items-start">
             {/* Alta de Producto (Revelado Progresivo) */}
-            <div className="lg:col-span-1 xl:col-span-4 bg-white border border-slate-200 rounded-xl p-2.5 sm:p-6 shadow-xs flex flex-col gap-2 sm:gap-4">
+            <div className="w-full lg:col-span-1 xl:col-span-4 bg-white border border-slate-200 rounded-xl p-2.5 sm:p-6 shadow-xs flex flex-col gap-2 sm:gap-4 shrink-0">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider">Nuevo Producto</h3>
                 {newCode && (
@@ -564,8 +564,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
             </div>
 
             {/* Listado de Productos (Mobile Cards + Desktop Table) */}
-            <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-2.5 sm:p-6 shadow-xs flex flex-col lg:h-fit">
-              <div className="flex items-center justify-between mb-1.5 sm:mb-4">
+            <div className="w-full lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-2.5 sm:p-6 shadow-xs flex flex-col flex-1 min-h-0 lg:h-fit">
+              <div className="flex items-center justify-between mb-1.5 sm:mb-4 shrink-0">
                 <h3 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider md:hidden">
                   Catálogo ({products.length > mobileProductLimit && !showAllProducts ? `${mobileProductLimit} de ${products.length}` : products.length})
                 </h3>
@@ -575,8 +575,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
                 <span className="text-[10px] sm:text-xs text-slate-400 font-medium">Toca +/- para ajustar unidades</span>
               </div>
 
-              {/* Vista Móvil: Cards apiladas y estilizadas (Límite inicial 3 items para encuadre sin scroll) */}
-              <div className="md:hidden flex flex-col divide-y divide-slate-100">
+              {/* Vista Móvil: Cards apiladas y estilizadas con distribución armónica */}
+              <div className="md:hidden flex flex-col divide-y divide-slate-100 flex-1 justify-around">
                 {displayedMobileProducts.map((p) => (
                   <div key={p.id} className="py-1.5 sm:py-2.5 flex flex-col gap-1">
                     <div className="flex items-start justify-between gap-2">
@@ -657,7 +657,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
 
               {/* Botón desplegable Ver más productos (Mobile) */}
               {hasMoreMobileProducts && (
-                <div className="md:hidden pt-1.5 mt-1 border-t border-slate-100 flex justify-center">
+                <div className="md:hidden pt-2 mt-auto border-t border-slate-100 flex justify-center shrink-0">
                   <button
                     type="button"
                     onClick={() => setShowAllProducts((prev) => !prev)}
@@ -808,8 +808,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
 
         {/* TAB: CONTROL TRANSACCIONAL DE STOCK */}
         {activeSubTab === 'stock' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-2.5 sm:gap-6 items-start flex-1">
-            <div className="lg:col-span-1 xl:col-span-4 bg-white border border-slate-200 rounded-xl p-2.5 sm:p-6 shadow-xs flex flex-col gap-2 sm:gap-4">
+          <div className="flex-1 min-h-0 w-full flex flex-col lg:grid lg:grid-cols-3 xl:grid-cols-12 gap-2.5 sm:gap-6 lg:items-start">
+            <div className="w-full lg:col-span-1 xl:col-span-4 bg-white border border-slate-200 rounded-xl p-2.5 sm:p-6 shadow-xs flex flex-col gap-2 sm:gap-4 shrink-0">
               <div>
                 <h3 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider">Registrar Movimiento Manual</h3>
                 <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 hidden sm:block">Ingreso o egreso manual de mercadería</p>
@@ -906,9 +906,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
               </form>
             </div>
 
-            <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-2.5 sm:p-6 shadow-xs flex flex-col lg:h-fit">
+            <div className="w-full lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-2.5 sm:p-6 shadow-xs flex flex-col flex-1 min-h-0 lg:h-fit">
               {/* Cabecera del Histórico con Panel de Informe en 1 sola fila simétrica */}
-              <div className="flex flex-col gap-1.5 sm:gap-3 mb-1.5 sm:mb-4 border-b border-slate-100 pb-1.5 sm:pb-3.5">
+              <div className="flex flex-col gap-1.5 sm:gap-3 mb-1.5 sm:mb-4 border-b border-slate-100 pb-1.5 sm:pb-3.5 shrink-0">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider md:hidden">
                     Historial ({filteredMovements.length > mobileMovementLimit && !showAllMovements ? `${mobileMovementLimit} de ${filteredMovements.length}` : filteredMovements.length})
@@ -980,7 +980,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
               </div>
 
               {/* Vista Móvil: Cards apiladas con detalle del producto */}
-              <div className="md:hidden flex flex-col divide-y divide-slate-100">
+              <div className="md:hidden flex flex-col divide-y divide-slate-100 flex-1 justify-around">
                 {displayedMobileMovements.map((m) => {
                   const product = productMap.get(m.productId);
                   const productName = m.productName || product?.name || 'Producto no identificado';
@@ -1015,8 +1015,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
                       </div>
 
                       {/* Fila 2: Motivo y Fecha */}
-                      <div className="flex items-center justify-between text-[10px] pt-0.5 border-t border-slate-50 text-slate-500">
-                        <span className="truncate max-w-[180px]" title={m.reason}>
+                      <div className="flex items-center justify-between text-[10px] pt-0.5 border-t border-slate-50 text-slate-500 gap-1">
+                        <span className="min-w-0 flex-1 truncate" title={m.reason}>
                           {m.reason || (isEntry ? 'Ingreso registrado' : 'Egreso registrado')}
                         </span>
                         <span className="font-mono text-[9px] text-slate-400 shrink-0">
@@ -1038,7 +1038,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
 
               {/* Botón desplegable Ver más movimientos (Mobile) */}
               {hasMoreMobileMovements && (
-                <div className="pt-2 mt-1 border-t border-slate-100 flex justify-center md:hidden">
+                <div className="pt-2 mt-auto border-t border-slate-100 flex justify-center md:hidden shrink-0">
                   <button
                     type="button"
                     onClick={() => setShowAllMovements((prev) => !prev)}
@@ -1149,7 +1149,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
 
         {/* TAB: REMITO IA */}
         {activeSubTab === 'receipt' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-3 sm:gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-3 sm:gap-6 items-start w-full">
             {/* Panel Izquierdo: Captura / Selección de Foto y Estado de Motor */}
             <div className="lg:col-span-1 xl:col-span-4 bg-white border border-slate-200 rounded-xl p-3 sm:p-6 shadow-xs flex flex-col gap-2.5 sm:gap-4 h-fit">
               <div className="flex items-center justify-between">

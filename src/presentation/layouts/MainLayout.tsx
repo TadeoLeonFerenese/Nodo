@@ -8,7 +8,7 @@ interface MainLayoutProps {
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ currentTab, onTabChange, children }) => {
   return (
-    <div className="h-full bg-slate-50 flex flex-col font-sans antialiased text-slate-800 w-full max-w-full overflow-x-hidden pb-20 md:pb-0">
+    <div className="h-full bg-slate-50 flex flex-col font-sans antialiased text-slate-800 w-full max-w-full overflow-hidden">
       {/* Top Bar / Header */}
       <header className="bg-white border-b border-slate-200 px-3 sm:px-6 lg:px-8 py-2 sm:py-3 shadow-xs sticky top-0 z-20 w-full max-w-full shrink-0">
         <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto flex items-center justify-between gap-2">
@@ -60,7 +60,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ currentTab, onTabChange,
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto w-full max-w-7xl 2xl:max-w-[1600px] mx-auto p-2.5 sm:p-6 lg:p-8">
+      <main className="flex-1 min-h-0 overflow-y-auto flex flex-col w-full max-w-7xl 2xl:max-w-[1600px] mx-auto p-2.5 sm:p-6 lg:p-8">
         {children}
       </main>
 
@@ -69,7 +69,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ currentTab, onTabChange,
         El menú inferior (bottom navigation) debe tener ÚNICA Y EXCLUSIVAMENTE DOS opciones: "Inicio" y "Perfil".
         Diseño con simetría matemática absoluta (grid 50% / 50%) y soporte para barra de navegación/gestos.
       */}
-      <nav className="fixed bottom-0 left-0 right-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200 z-30 md:hidden shadow-[0_-4px_16px_rgba(0,0,0,0.06)] pb-[max(0.35rem,env(safe-area-inset-bottom))]">
+      <nav className="shrink-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200 z-30 md:hidden shadow-[0_-4px_16px_rgba(0,0,0,0.06)] pb-[max(0.35rem,env(safe-area-inset-bottom))]">
         <div className="grid grid-cols-2 w-full max-w-md mx-auto">
           {/* Opción 1: Inicio */}
           <button
