@@ -370,7 +370,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
         </div>
       )}
 
-      <div className={`flex flex-col gap-3 sm:gap-6 ${isScanning ? 'scanner-hide-during-scan' : ''}`}>
+      <div className={`flex flex-col gap-3 sm:gap-6 h-full ${isScanning ? 'scanner-hide-during-scan' : ''}`}>
         {/* Alertas de Stock Mínimo */}
         {activeLowStockProducts.length > 0 && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-4 flex flex-col gap-2 shadow-xs">
@@ -475,7 +475,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
 
         {/* TAB: CATÁLOGO DE PRODUCTOS */}
         {activeSubTab === 'catalog' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-2.5 sm:gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-2.5 sm:gap-6 items-start flex-1">
             {/* Alta de Producto (Revelado Progresivo) */}
             <div className="lg:col-span-1 xl:col-span-4 bg-white border border-slate-200 rounded-xl p-2.5 sm:p-6 shadow-xs flex flex-col gap-2 sm:gap-4">
               <div className="flex items-center justify-between">
@@ -564,7 +564,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
             </div>
 
             {/* Listado de Productos (Mobile Cards + Desktop Table) */}
-            <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-2.5 sm:p-6 shadow-xs flex flex-col h-fit">
+            <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-2.5 sm:p-6 shadow-xs flex flex-col lg:h-fit">
               <div className="flex items-center justify-between mb-1.5 sm:mb-4">
                 <h3 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider md:hidden">
                   Catálogo ({products.length > mobileProductLimit && !showAllProducts ? `${mobileProductLimit} de ${products.length}` : products.length})
@@ -808,7 +808,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
 
         {/* TAB: CONTROL TRANSACCIONAL DE STOCK */}
         {activeSubTab === 'stock' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-2.5 sm:gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-12 gap-2.5 sm:gap-6 items-start flex-1">
             <div className="lg:col-span-1 xl:col-span-4 bg-white border border-slate-200 rounded-xl p-2.5 sm:p-6 shadow-xs flex flex-col gap-2 sm:gap-4">
               <div>
                 <h3 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider">Registrar Movimiento Manual</h3>
@@ -906,7 +906,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigateToProfile }) => {
               </form>
             </div>
 
-            <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-2.5 sm:p-6 shadow-xs flex flex-col h-fit">
+            <div className="lg:col-span-2 xl:col-span-8 bg-white border border-slate-200 rounded-xl p-2.5 sm:p-6 shadow-xs flex flex-col lg:h-fit">
               {/* Cabecera del Histórico con Panel de Informe en 1 sola fila simétrica */}
               <div className="flex flex-col gap-1.5 sm:gap-3 mb-1.5 sm:mb-4 border-b border-slate-100 pb-1.5 sm:pb-3.5">
                 <div className="flex items-center justify-between">
